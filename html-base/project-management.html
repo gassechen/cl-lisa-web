@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Management</title>
+    <!-- UIkit CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uikit@3.16.26/dist/css/uikit.min.css" />
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@1.9.5"></script>
+    <style>
+        body {
+            padding: 20px;
+        }
+        .uk-card {
+            margin-bottom: 20px;
+        }
+        .project-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        .project-item:last-child {
+            border-bottom: none;
+        }
+        .actions button {
+            margin-left: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="uk-container">
+    <h1 class="uk-heading-primary">Project Management</h1>
+
+    <!-- Create New Project -->
+    <div class="uk-card uk-card-default uk-card-body">
+        <h3 class="uk-card-title">Create New Project</h3>
+        <form id="new-project-form" hx-post="/api/projects" hx-target="#projects-list" hx-swap="beforeend" class="uk-form-stacked">
+            <div class="uk-margin">
+                <label class="uk-form-label" for="project-name">Project Name</label>
+                <div class="uk-form-controls">
+                    <input class="uk-input" id="project-name" name="projectName" type="text" placeholder="Example: Medical Diagnosis" required>
+                </div>
+            </div>
+            <div class="uk-margin">
+                <label class="uk-form-label" for="project-description">Description</label>
+                <div class="uk-form-controls">
+                    <textarea class="uk-textarea" id="project-description" name="projectDescription" rows="4" placeholder="Describe the purpose of the project"></textarea>
+                </div>
+            </div>
+            <div class="uk-margin">
+                <button class="uk-button uk-button-primary" type="submit">Create Project</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Load Project from Disk -->
+    <div class="uk-card uk-card-default uk-card-body">
+        <h3 class="uk-card-title">Load Project from Disk</h3>
+        <form id="load-project-form" class="uk-form-stacked">
+            <div class="uk-margin">
+                <label class="uk-form-label" for="project-file">Select File</label>
+                <div class="uk-form-controls">
+                    <input class="uk-input" id="project-file" type="file" accept=".json,.xml" required>
+                </div>
+            </div>
+            <div class="uk-margin">
+                <button class="uk-button uk-button-secondary" type="submit">Load Project</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- List of Projects -->
+    <div class="uk-card uk-card-default uk-card-body">
+        <h3 class="uk-card-title">List of Projects</h3>
+        <div id="projects-list">
+            <div class="uk-alert uk-alert-warning" uk-alert>
+                <p>No projects available. Create one!</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Button to go to System Execution -->
+    <div class="uk-text-center">
+        <a href="system-execution.html" class="uk-button uk-button-primary">Go to System Execution</a>
+    </div>
+</div>
+
+<!-- UIkit JS -->
+<script src="https://cdn.jsdelivr.net/npm/uikit@3.16.26/dist/js/uikit.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/uikit@3.16.26/dist/js/uikit-icons.min.js"></script>
+
+</body>
+</html>

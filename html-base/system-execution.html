@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Execution</title>
+    <!-- UIkit CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uikit@3.16.26/dist/css/uikit.min.css" />
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@1.9.5"></script>
+    <style>
+        body {
+            padding: 20px;
+        }
+        .uk-card {
+            margin-bottom: 20px;
+        }
+        .rule-item, .template-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        .rule-item:last-child, .template-item:last-child {
+            border-bottom: none;
+        }
+        .actions button {
+            margin-left: 5px;
+        }
+        .console-output {
+            background-color: #222;
+            color: #fff;
+            padding: 10px;
+            font-family: monospace;
+            height: 200px;
+            overflow-y: auto;
+        }
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+        }
+        .status-running {
+            background-color: green;
+        }
+        .status-stopped {
+            background-color: red;
+        }
+    </style>
+</head>
+<body>
+
+<div class="uk-container">
+    <h1 class="uk-heading-primary">System Execution</h1>
+
+    <!-- Control Panel -->
+    <div class="uk-card uk-card-default uk-card-body">
+        <h3 class="uk-card-title">Control Panel</h3>
+        <div class="uk-grid-small" uk-grid>
+            <div class="uk-width-auto">
+                <button id="start-system-btn" class="uk-button uk-button-success">
+                    <span class="status-indicator status-stopped" id="status-indicator"></span>
+                    Start System
+                </button>
+            </div>
+            <div class="uk-width-auto">
+                <button id="stop-system-btn" class="uk-button uk-button-danger" disabled>Stop System</button>
+            </div>
+            <div class="uk-width-auto">
+                <button id="debug-system-btn" class="uk-button uk-button-secondary" disabled>Debug</button>
+            </div>
+            <div class="uk-width-expand">
+                <button id="reset-system-btn" class="uk-button uk-button-default">Reset System</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Console Output -->
+    <div class="uk-card uk-card-default uk-card-body">
+        <h3 class="uk-card-title">Console Output</h3>
+        <div class="console-output" id="console-output">
+            System stopped. Press "Start System" to begin.
+        </div>
+    </div>
+
+    <!-- Rule Management -->
+    <div class="uk-card uk-card-default uk-card-body">
+        <h3 class="uk-card-title">Rule Management</h3>
+        <div id="rules-list">
+            <div class="uk-alert uk-alert-warning" uk-alert>
+                <p>No rules defined.</p>
+            </div>
+        </div>
+        <button class="uk-button uk-button-secondary" id="add-rule-btn">Add Rule</button>
+    </div>
+
+    <!-- Template Management -->
+    <div class="uk-card uk-card-default uk-card-body">
+        <h3 class="uk-card-title">Template Management</h3>
+        <div id="templates-list">
+            <div class="uk-alert uk-alert-warning" uk-alert>
+                <p>No templates defined.</p>
+            </div>
+        </div>
+        <button class="uk-button uk-button-secondary" id="add-template-btn">Add Template</button>
+    </div>
+
+    <!-- System Execution -->
+    <div class="uk-card uk-card-default uk-card-body">
+        <h3 class="uk-card-title">Run System</h3>
+        <form id="run-system-form" class="uk-form-stacked">
+            <div class="uk-margin">
+                <label class="uk-form-label" for="input-data">Input Data</label>
+                <div class="uk-form-controls">
+                    <textarea class="uk-textarea" id="input-data" rows="4" placeholder="Enter input data to run the system"></textarea>
+                </div>
+            </div>
+            <div class="uk-margin">
+                <button class="uk-button uk-button-primary" type="submit">Run</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Button to return to Project Management -->
+    <div class="uk-text-center">
+        <a href="project-management.html" class="uk-button uk-button-default">Return to Project Management</a>
+    </div>
+</div>
+
+<!-- Modal for Adding/Editing Rules -->
+<div id="rule-modal" uk-modal>
+    <div class="uk-modal-dialog uk-modal-body">
+        <h2 class="uk-modal-title">Add/Edit Rule</h2>
+        <form id="rule-form" class="uk-form-stacked">
+            <div class="uk-margin">
+                <label class="uk-form-label" for="rule-name">Rule Name</label>
+                <div class="uk-form-controls">
+                    <input class="uk-input" id="rule-name" name="ruleName" type="text" placeholder="Example: Rule 1" required>
+                </div>
+            </div>
+            <div class="uk-margin">
+                <label class="uk-form-label" for="rule-condition">Condition</label>
+                <div class="uk-form-controls">
+                    <textarea class="uk-textarea" id="rule-condition" name="ruleCondition" rows="4" placeholder="Write the rule condition"></textarea>
+                </div>
+            </div>
+            <div class="uk-margin">
+                <label class="uk-form-label" for="rule-action">Action</label>
+                <div class="uk-form-controls">
+                    <textarea class="uk-textarea" id="rule-action" name="ruleAction" rows="4" placeholder="Write the rule action"></textarea>
+                </div>
+            </div>
+            <div class="uk-margin">
+                <button class="uk-button uk-button-primary" type="submit">Save</button>
+                <button class="uk-button uk-button-default uk-modal-close" type="button">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal for Adding/Editing Templates -->
+<div id="template-modal" uk-modal>
+    <div class="uk-modal-dialog uk-modal-body">
+        <h2 class="uk-modal-title">Add/Edit Template</h2>
+        <form id="template-form" class="uk-form-stacked">
+            <div class="uk-margin">
+                <label class="uk-form-label" for="template-name">Template Name</label>
+                <div class="uk-form-controls">
+                    <input class="uk-input" id="template-name" name="templateName" type="text" placeholder="Example: Template 1" required>
+                </div>
+            </div>
+            <div class="uk-margin">
+                <label class="uk-form-label" for="template-content">Content</label>
+                <div class="uk-form-controls">
+                    <textarea class="uk-textarea" id="template-content" name="templateContent" rows="4" placeholder="Write the template content"></textarea>
+                </div>
+            </div>
+            <div class="uk-margin">
+                <button class="uk-button uk-button-primary" type="submit">Save</button>
+                <button class="uk-button uk-button-default uk-modal-close" type="button">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- UIkit JS -->
+<script src="https://cdn.jsdelivr.net/npm/uikit@3.16.26/dist/js/uikit.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/uikit@3.16.26/dist/js/uikit-icons.min.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const consoleOutput = document.getElementById('console-output');
+        const statusIndicator = document.getElementById('status-indicator');
+        const startSystemBtn = document.getElementById('start-system-btn');
+        const stopSystemBtn = document.getElementById('stop-system-btn');
+        const debugSystemBtn = document.getElementById('debug-system-btn');
+        const resetSystemBtn = document.getElementById('reset-system-btn');
+
+        let systemRunning = false;
+
+        // Function to start the system
+        startSystemBtn.addEventListener('click', () => {
+            if (!systemRunning) {
+                systemRunning = true;
+                statusIndicator.classList.remove('status-stopped');
+                statusIndicator.classList.add('status-running');
+                startSystemBtn.disabled = true;
+                stopSystemBtn.disabled = false;
+                debugSystemBtn.disabled = false;
+                consoleOutput.textContent = 'System started. Waiting for commands...';
+            }
+        });
+
+        // Function to stop the system
+        stopSystemBtn.addEventListener('click', () => {
+            if (systemRunning) {
+                systemRunning = false;
+                statusIndicator.classList.remove('status-running');
+                statusIndicator.classList.add('status-stopped');
+                startSystemBtn.disabled = false;
+                stopSystemBtn.disabled = true;
+                debugSystemBtn.disabled = true;
+                consoleOutput.textContent = 'System stopped.';
+            }
+        });
+
+        // Function to reset the system
+        resetSystemBtn.addEventListener('click', () => {
+            systemRunning = false;
+            statusIndicator.classList.remove('status-running');
+            statusIndicator.classList.add('status-stopped');
+            startSystemBtn.disabled = false;
+            stopSystemBtn.disabled = true;
+            debugSystemBtn.disabled = true;
+            consoleOutput.textContent = 'System reset. Press "Start System" to begin.';
+        });
+
+        // Handle system execution
+        document.getElementById('run-system-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (systemRunning) {
+                const inputData = document.getElementById('input-data').value;
+                consoleOutput.textContent += `\nExecuting with data: ${inputData}\nSimulated result: [OK]`;
+            } else {
+                consoleOutput.textContent = 'Error: The system is not running.';
+            }
+        });
+
+        // Open modal to add rule
+        document.getElementById('add-rule-btn').addEventListener('click', () => {
+            UIkit.modal('#rule-modal').show();
+        });
+
+        // Open modal to add template
+        document.getElementById('add-template-btn').addEventListener('click', () => {
+            UIkit.modal('#template-modal').show();
+        });
+    });
+</script>
+
+</body>
+</html>
