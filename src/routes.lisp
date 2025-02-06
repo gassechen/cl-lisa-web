@@ -53,22 +53,33 @@
   "Devuelve una lista HTML con los nombres de los proyectos disponibles."
   (setf (hunchentoot:content-type*) "text/html")
   (let* ((base-path (merge-pathnames "projects/" (asdf:system-source-directory :cl-lisa-web)))
-         (projects (uiop:directory-exists-p base-path))
-	 (projects-sub-dir (uiop:subdirectories base-path))
-         (project-names (when projects
+       	 (projects (uiop:subdirectories base-path))
+	 (project-names (when projects
                           (mapcar #'(lambda (name) 
-			 (car (reverse (pathname-directory(parse-namestring  name))))) 
-		     projects-sub-dir))))
+				      (car (reverse (pathname-directory(parse-namestring  name))))) 
+				  projects))))
     (if project-names
         ;; Generar una lista de proyectos con HTMX
-        (with-output-to-string (s)
-          (format s "<ul class='uk-list uk-list-divider'>")
+	(spinneret:with-html-string
+	  (:ul :class "uk-list uk-list-divider")
           (dolist (project project-names)
-            (format s "<li><a href='/system-execution.html?project=~a' hx-get='/api/load-project?name=~a' hx-target='#system-details'>~a</a></li>"
-                    project project project))
-          (format s "</ul>"))
-        ;; Si no hay proyectos disponibles
-        "<div class='uk-alert uk-alert-warning' data-uk-alert><p>No projects available. Create one!</p></div>")))
+	    (:li (:button :class "uk-button uk-button-link" :type "button"
+			  :data-hx-post (format nil "/api/projects/load/~A" project)
+			  :data-hx-swap "outerHTML"
+			  :data-hx-target "Body"
+			  (format nil "~A" project))))))))
+
+
+
+
+(easy-routes:defroute load-projects-load ("/api/projects/load/:x" :method :post) ()
+  "Carga proyecto"
+  (setf (hunchentoot:content-type*) "text/html")
+  (setf (hunchentoot:header-out "Content-Security-Policy") "default-src 'self'")
+  (setf (hunchentoot:header-out "X-Frame-Options") "DENY")
+  (setf (hunchentoot:header-out "X-Content-Type-Options") "nosniff")
+  ;; Obtener los parámetros POST
+  (render-system-execution-page x))
 
 
 

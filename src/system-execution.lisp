@@ -1,6 +1,6 @@
 (in-package :cl-lisa-web)
 
-(defun render-system-execution-page ()
+(defun render-system-execution-page (project-name)
   (spinneret:with-html-string
     (:doctype)
     (:html :lang "en"
@@ -12,7 +12,7 @@
             (:script :src "https://unpkg.com/htmx.org@1.9.5"))
 	   (:body
             (:div :class "uk-container"
-		  (:h1 :class "uk-heading-primary" "System Execution")
+		  (:h1 :class "uk-heading-primary" (format nil "System Execution ~A project" project-name))
 
 		  ;; Control Panel (HTMX Integration)
 		  (:div :class "uk-card uk-card-default uk-card-body"
