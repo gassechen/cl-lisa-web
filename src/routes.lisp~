@@ -1,0 +1,47 @@
+(in-package :cl-lisa-web)
+
+;; Definir las rutas de la API
+(defroute load-projects ("/api/projects" :method :get)
+  "Carga la lista de proyectos."
+  (declare (ignore params))
+  "OK")
+
+(defroute create-project ("/api/projects" :method :post)
+  "Crea un nuevo proyecto."
+  (declare (ignore params))
+  "OK")
+
+(defroute load-rules ("/api/rules" :method :get)
+  "Carga la lista de reglas."
+  (declare (ignore params))
+  "OK")
+
+(defroute add-rule-form ("/api/add-rule-form" :method :get)
+  "Carga el formulario para agregar una nueva regla."
+  (declare (ignore params))
+  "OK")
+
+(defroute save-rule ("/api/rules" :method :post)
+  "Guarda una nueva regla."
+  (declare (ignore params))
+  "OK")
+
+(defroute load-templates ("/api/templates" :method :get)
+  "Carga la lista de plantillas."
+  (declare (ignore params))
+  "OK")
+
+(defroute add-template-form ("/api/add-template-form" :method :get)
+  "Carga el formulario para agregar una nueva plantilla."
+  (declare (ignore params))
+  "OK")
+
+(defroute save-template ("/api/templates" :method :post)
+  "Guarda una nueva plantilla."
+  (declare (ignore params))
+  "OK")
+
+(defroute run-system ("/api/run-system" :method :post)
+  "Ejecuta el sistema experto."
+  (declare (ignore params))
+  "OK")

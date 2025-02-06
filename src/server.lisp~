@@ -1,0 +1,10 @@
+;; Iniciar el servidor Hunchentoot con easy-routes
+(defvar *server* (make-instance 'easy-routes:routes-acceptor :port 8080))
+
+(defun start-server ()
+  "Inicia el servidor Hunchentoot."
+  (hunchentoot:start *server*))
+
+(defun stop-server ()
+  "Detiene el servidor Hunchentoot."
+  (hunchentoot:stop *server*))
