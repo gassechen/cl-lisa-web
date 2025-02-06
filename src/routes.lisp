@@ -49,6 +49,26 @@
     project-path))
 
 
+(defun get-rules-from-project (project-name)
+  "Carga y devuelve el contenido del archivo 'rules.lisp' del proyecto especificado."
+  (let* ((base-path (merge-pathnames "projects/" (asdf:system-source-directory :cl-lisa-web)))
+         (project-path (merge-pathnames (format nil "~a/" project-name) base-path))
+         (rules-file-path (merge-pathnames "rules.lisp" project-path)))
+    ;; Verificar si el archivo existe
+    (if (uiop:file-exists-p rules-file-path)
+        ;; Leer el contenido del archivo
+        (with-open-file (stream rules-file-path
+                                :direction :input
+                                :element-type 'character)
+          (let ((content (loop for line = (read-line stream nil)
+                               while line
+                               collect line)))
+	     (format nil "<pre>~a</pre>" (format nil "~{~a~%~}" content))))
+            
+        ;; Si el archivo no existe, devolver un mensaje de error
+        (format nil "Error: No rules file found for project '~a'." project-name))))
+
+
 (easy-routes:defroute load-projects-list ("/api/projects/list" :method :get) ()
   "Devuelve una lista HTML con los nombres de los proyectos disponibles."
   (setf (hunchentoot:content-type*) "text/html")
@@ -82,12 +102,14 @@
   (render-system-execution-page x))
 
 
-
-
-(defroute load-rules ("/api/rules" :method :get)
+(easy-routes:defroute load-rules ("/api/rules/:project-name" :method :get)()
   "Carga la lista de reglas."
-  (print "OK"))
+  (setf (hunchentoot:content-type*) "text/html")
+  (get-rules-from-project project-name))
+  
 
+
+  
 (defroute add-rule-form ("/api/add-rule-form" :method :get)
   "Carga el formulario para agregar una nueva regla."
   (print "OK"))

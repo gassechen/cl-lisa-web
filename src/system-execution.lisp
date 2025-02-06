@@ -9,7 +9,9 @@
             (:meta :name "viewport" :content "width=device-width, initial-scale=1.0")
             (:title "System Execution")
             (:link :rel "stylesheet" :href "https://cdn.jsdelivr.net/npm/uikit@3.16.26/dist/css/uikit.min.css")
-            (:script :src "https://unpkg.com/htmx.org@1.9.5"))
+            (:script :src "https://unpkg.com/htmx.org@1.9.5")
+	   (:script  :src "https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js"))
+
 	   (:body
             (:div :class "uk-container"
 		  (:h1 :class "uk-heading-primary" (format nil "System Execution ~A project" project-name))
@@ -40,24 +42,103 @@
 		  (:div :class "uk-card uk-card-default uk-card-body"
 			(:h3 :class "uk-card-title" "Rule Management")
 			;; List of Rules (Dynamic Updates with HTMX)
-			(:div :id "rules-list"
-			      (:button :class "uk-button uk-button-default" :data-hx-get "/api/rules"
-				       :data-hx-target "#rules-list"
-				       :data-hx-swap "innerHTML" "Load Rules")
-			      (:div :class "uk-alert uk-alert-warning" :data-uk-alert t
-				    (:p "No rules defined.")))
-			;; Add Rule Button (HTMX Integration)
-			(:button :class "uk-button uk-button-secondary" :data-hx-get "/api/add-rule-form"
-				 :data-hx-target "#rule-modal-content"
+			;; Editor for Rules
+			(:div :id "rules-view"
+			      :style "max-height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; background-color: #f9f9f9;"
+			      (:raw (get-rules-from-project project-name)))
+		  	;; Add Template Button (HTMX Integration)
+			(:button :class "uk-button uk-button-secondary" :data-hx-get "/api/add-rules-form"
+				 :data-hx-target "#template-modal-content"
 				 :data-hx-swap "innerHTML"
 				 :data-uk-toggle "target: #rule-modal" "Add Rule"))
+		  
+
+		  ;; ;; Modal for Adding/Editing Rules
+		  ;; (:div :id "rule-modal" :data-uk-modal t
+		  ;; 	(:div :class "uk-modal-dialog uk-modal-body"
+		  ;; 	      (:h2 :class "uk-modal-title" "Agregar/Editar Regla")
+		  ;; 	      (:form :id "rule-form" :class "uk-form-stacked"
+		  ;; 		     ;; Nombre de la Regla
+		  ;; 		     (:div :class "uk-margin"
+		  ;; 			   (:label :class "uk-form-label" :for "rule-name" "Nombre de la Regla")
+		  ;; 			   (:div :class "uk-form-controls"
+		  ;; 				 (:input :class "uk-input" :id "rule-name" :name "ruleName" :type "text"
+		  ;; 					 :placeholder "Ejemplo: Regla 1" :required t)))
+		  ;; 		     ;; Condición
+		  ;; 		     (:div :class "uk-margin"
+		  ;; 			   (:label :class "uk-form-label" :for "rule-condition" "Condición")
+		  ;; 			   (:div :class "uk-form-controls"
+		  ;; 				 (:textarea :class "uk-textarea" :id "rule-condition" :name "ruleCondition" :rows "4"
+		  ;; 					    :placeholder "Escriba la condición de la regla")))
+		  ;; 		     ;; Acción
+		  ;; 		     (:div :class "uk-margin"
+		  ;; 			   (:label :class "uk-form-label" :for "rule-action" "Acción")
+		  ;; 			   (:div :class "uk-form-controls"
+		  ;; 				 (:textarea :class "uk-textarea" :id "rule-action" :name "ruleAction" :rows "4"
+		  ;; 					    :placeholder "Escriba la acción de la regla")))
+		  ;; 		     ;; Botones
+		  ;; 		     (:div :class "uk-margin"
+		  ;; 			   (:button :class "uk-button uk-button-primary" :type "submit" "Guardar")
+		  ;; 			   (:button :class "uk-button uk-button-default uk-modal-close" :type "button" "Cancelar")))))
+
+
 
 		  ;; Modal for Adding/Editing Rules
 		  (:div :id "rule-modal" :data-uk-modal t
 			(:div :class "uk-modal-dialog uk-modal-body"
-			      (:h2 :class "uk-modal-title" "Add/Edit Rule")
-			      (:div :id "rule-modal-content"
-				    (:p "Loading rule form..."))))
+			      (:h2 :class "uk-modal-title" "Agregar/Editar Regla")
+			      (:form :id "rule-form" :class "uk-form-stacked"
+				     ;; Nombre de la Regla
+				     (:div :class "uk-margin"
+					   (:label :class "uk-form-label" :for "rule-name" "Nombre de la Regla")
+					   (:div :class "uk-form-controls"
+						 (:input :class "uk-input" :id "rule-name" :name "ruleName" :type "text"
+							 :placeholder "Ejemplo: Regla 1" :required t)))
+				     ;; Condición (Ace Editor)
+				     (:div :class "uk-margin"
+					   (:label :class "uk-form-label" :for "rule-condition" "Condición")
+					   (:div :class "uk-form-controls"
+						 (:div :id "rule-condition-editor" :style "height: 150px; border: 1px solid #ddd; background-color: #f9f9f9;")))
+				     ;; Acción (Ace Editor)
+				     (:div :class "uk-margin"
+					   (:label :class "uk-form-label" :for "rule-action" "Acción")
+					   (:div :class "uk-form-controls"
+						 (:div :id "rule-action-editor" :style "height: 150px; border: 1px solid #ddd; background-color: #f9f9f9;")))
+				     ;; Botones
+				     (:div :class "uk-margin"
+					   (:button :class "uk-button uk-button-primary" :type "submit" "Guardar")
+					   (:button :class "uk-button uk-button-default uk-modal-close" :type "button" "Cancelar"))))
+			;; Initialize Ace Editors
+			(:raw "<script>
+                               // Initialize Ace Editors when the modal is shown
+                               UIkit.util.on('#rule-modal', 'show', function() {
+                               // Initialize Condition Editor
+                               var conditionEditor = ace.edit('rule-condition-editor');
+                               conditionEditor.session.setMode('ace/mode/lisp');
+                               conditionEditor.setOptions({
+                               maxLines: 10,
+                               minLines: 5,
+                               fontSize: '14px',
+                               showGutter: false,
+                             
+                               
+                              });
+
+                              // Initialize Action Editor
+                             var actionEditor = ace.edit('rule-action-editor');
+                             actionEditor.session.setMode('ace/mode/lisp');
+                             actionEditor.setOptions({
+                             maxLines: 10,
+                             minLines: 5,
+                             fontSize: '14px',
+                             showGutter: false,
+                             
+                             });
+                           });   
+                               </script>"))
+
+
+		  
 		  ;; Template Management (HTMX Integration)
 		  (:div :class "uk-card uk-card-default uk-card-body"
 			(:h3 :class "uk-card-title" "Template Management")

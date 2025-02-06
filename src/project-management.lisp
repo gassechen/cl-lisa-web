@@ -9,7 +9,9 @@
         (:meta :name "viewport" :content "width=device-width, initial-scale=1.0")
         (:title "Project Management")
         (:link :rel "stylesheet" :href "https://cdn.jsdelivr.net/npm/uikit@3.16.26/dist/css/uikit.min.css")
-        (:script :src "https://unpkg.com/htmx.org@1.9.5"))
+        (:script :src "https://unpkg.com/htmx.org@1.9.5")
+	(:script  :src "https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js"))
+
       (:body
         (:div :class "uk-container"
           (:h1 :class "uk-heading-primary" "Project Management")
@@ -33,9 +35,11 @@
 	  ;; List of Projects (Dynamic Updates with HTMX)
 	  (:div :class "uk-card uk-card-default uk-card-body"
 		(:h3 :class "uk-card-title" "List of Projects")
-		(:button :class "uk-button uk-button-default" :data-hx-get "/api/projects/list"
+		(:button :class "uk-button uk-button-default"
+			 :data-hx-get "/api/projects/list"
 			 :data-hx-target "#projects-list"
-			 :data-hx-swap "innerHTML" "Load Projects")
+			 :data-hx-swap "innerHTML"
+			 "Load Projects")
 		(:div :id "projects-list"
 		      (:div :class "uk-alert uk-alert-warning" :data-uk-alert t
 			    (:p "No projects available. Create one!"))))
