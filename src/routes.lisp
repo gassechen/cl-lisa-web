@@ -69,6 +69,29 @@
         (format nil "Error: No rules file found for project '~a'." project-name))))
 
 
+(defun get-templates-from-project (project-name)
+  "Carga y devuelve el contenido del archivo 'templates.lisp' del proyecto especificado."
+  (let* ((base-path (merge-pathnames "projects/" (asdf:system-source-directory :cl-lisa-web)))
+         (project-path (merge-pathnames (format nil "~a/" project-name) base-path))
+         (templates-file-path (merge-pathnames "templates.lisp" project-path)))
+    ;; Verificar si el archivo existe
+    (if (uiop:file-exists-p templates-file-path)
+        ;; Leer el contenido del archivo
+        (with-open-file (stream templates-file-path
+                                :direction :input
+                                :element-type 'character)
+          (let ((content (loop for line = (read-line stream nil)
+                               while line
+                               collect line)))
+	     (format nil "<pre>~a</pre>" (format nil "~{~a~%~}" content))))
+            
+        ;; Si el archivo no existe, devolver un mensaje de error
+        (format nil "Error: No templates file found for project '~a'." project-name))))
+
+
+
+
+
 (easy-routes:defroute load-projects-list ("/api/projects/list" :method :get) ()
   "Devuelve una lista HTML con los nombres de los proyectos disponibles."
   (setf (hunchentoot:content-type*) "text/html")
@@ -106,13 +129,54 @@
   "Carga la lista de reglas."
   (setf (hunchentoot:content-type*) "text/html")
   (get-rules-from-project project-name))
-  
 
 
-  
-(defroute add-rule-form ("/api/add-rule-form" :method :get)
-  "Carga el formulario para agregar una nueva regla."
-  (print "OK"))
+(easy-routes:defroute load-templatess ("/api/templates/:project-name" :method :get)()
+  "Carga la lista de templates."
+  (setf (hunchentoot:content-type*) "text/html")
+  (get-templates-from-project project-name))
+
+
+
+(easy-routes:defroute add-rule ("/api/add-rule" :method :post) ()
+  "Procesa los datos del formulario para agregar una nueva regla."
+  (let* ((params (hunchentoot:post-parameters*)) ; Obtener los parámetros POST
+	 (project-name (cdr (assoc "projectName" params :test #'string=)))
+         (rule-name (cdr (assoc "ruleName" params :test #'string=)))
+         (rule-condition (cdr (assoc "ruleCondition" params :test #'string=)))
+         (rule-action (cdr (assoc "ruleAction" params :test #'string=))))
+    ;; Validar que todos los campos estén presentes
+    (if (and rule-name rule-condition rule-action)
+        ;; Guardar la regla y devolver un mensaje de éxito
+        (progn
+          (save-rule-to-file project-name rule-name rule-condition rule-action)
+          (spinneret:with-html-string
+            (:div :class "uk-alert uk-alert-success" :data-uk-alert t
+                  (:p (format nil "Regla '~a' agregada correctamente." rule-name)))))
+        ;; Si falta algún campo, devolver un mensaje de error
+        (spinneret:with-html-string
+          (:div :class "uk-alert uk-alert-danger" :data-uk-alert t
+                (:p "Error: Todos los campos son obligatorios."))))))
+
+
+
+(defun save-rule-to-file (project-name rule-name rule-condition rule-action)
+  "Guarda una nueva regla en el archivo 'rules.lisp' del proyecto actual."
+  (let* ((project-name project-name) ; Reemplaza esto con el nombre del proyecto actual
+         (base-path (merge-pathnames "projects/" (asdf:system-source-directory :cl-lisa-web)))
+         (project-path (merge-pathnames (format nil "~a/" project-name) base-path))
+         (rules-file-path (merge-pathnames "rules.lisp" project-path)))
+    ;; Asegurarse de que el archivo exista
+    (ensure-directories-exist rules-file-path)
+    ;; Agregar la nueva regla al archivo
+    (with-open-file (stream rules-file-path
+                            :direction :output
+                            :if-exists :append
+                            :if-does-not-exist :create)
+      (format stream "(defrule ~a ()~%  ~a~%  =>~%  ~a)~%~%~%"
+              rule-name rule-condition rule-action))))
+
+
 
 (defroute save-rule ("/api/rules" :method :post)
   "Guarda una nueva regla."

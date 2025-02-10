@@ -11,3 +11,8 @@
   =>
   (assert (pump (state off)))
   (format t "Regla: Apagando bomba~%"))
+(defrule pump-11 ()
+  (a a)
+  =>
+  (b b))
+
