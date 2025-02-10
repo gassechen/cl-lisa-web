@@ -90,8 +90,6 @@
 
 
 
-
-
 (easy-routes:defroute load-projects-list ("/api/projects/list" :method :get) ()
   "Devuelve una lista HTML con los nombres de los proyectos disponibles."
   (setf (hunchentoot:content-type*) "text/html")
@@ -137,6 +135,49 @@
   (get-templates-from-project project-name))
 
 
+(easy-routes:defroute add-template ("/api/add-template" :method :post) ()
+  "Procesa los datos del formulario para agregar una nueva template."
+  (let* ((params (hunchentoot:post-parameters*)) ; Obtener los parámetros POST
+	 (project-name (cdr (assoc "projectName" params :test #'string=)))
+         (template-name (cdr (assoc "templateName" params :test #'string=)))
+         (template-body (cdr (assoc "templateBody" params :test #'string=))))
+     ; Validar que todos los campos estén presentes
+    (if (and template-name template-body)
+        ;; Guardar la regla y devolver un mensaje de éxito
+        (progn
+          (save-template-to-file project-name template-name template-body)
+          (spinneret:with-html-string
+            (:div :class "uk-alert uk-alert-success" :data-uk-alert t
+                  (:p (format nil "Template '~a' agregada correctamente." template-name)))))
+        ;; Si falta algún campo, devolver un mensaje de error
+        (spinneret:with-html-string
+          (:div :class "uk-alert uk-alert-danger" :data-uk-alert t
+                (:p "Error: Todos los campos son obligatorios."))))))
+
+
+
+(defun save-template-to-file (project-name template-name template-body )
+  "Guarda una nueva template en el archivo 'templates.lisp' del proyecto actual."
+  (let* ((project-name project-name) ; Reemplaza esto con el nombre del proyecto actual
+         (base-path (merge-pathnames "projects/" (asdf:system-source-directory :cl-lisa-web)))
+         (project-path (merge-pathnames (format nil "~a/" project-name) base-path))
+         (templates-file-path (merge-pathnames "templates.lisp" project-path)))
+    ;; Asegurarse de que el archivo exista
+    (ensure-directories-exist templates-file-path)
+    ;; Agregar la nueva regla al archivo
+    (with-open-file (stream templates-file-path
+                            :direction :output
+                            :if-exists :append
+                            :if-does-not-exist :create)
+
+      (format stream "(deftemplate ~a ()~%~{  ~a~%~})~%~%"
+              template-name
+              (indent-lines template-body)))))
+      
+
+
+
+
 
 (easy-routes:defroute add-rule ("/api/add-rule" :method :post) ()
   "Procesa los datos del formulario para agregar una nueva regla."
@@ -173,8 +214,21 @@
                             :direction :output
                             :if-exists :append
                             :if-does-not-exist :create)
-      (format stream "(defrule ~a ()~%  ~a~%  =>~%  ~a)~%~%~%"
+      (format stream "(defrule ~a ()~%  ~a~%  =>~%  ~a)~%~%"
               rule-name rule-condition rule-action))))
+
+
+
+
+(defun indent-lines (text)
+  "Aplica una indentación de dos espacios a cada línea del texto."
+  (mapcar (lambda (line)
+            (if (> (length line) 0)
+                (concatenate 'string "  " line)
+                ""))
+          (split-sequence:split-sequence #\Newline text)))
+
+
 
 
 

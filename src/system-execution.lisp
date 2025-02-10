@@ -46,18 +46,19 @@
 			      :style "max-height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; background-color: #f9f9f9;"
 			      (:raw (get-templates-from-project project-name)))
 			;; Add Template Button (HTMX Integration)
-			(:button :class "uk-button uk-button-secondary" :data-hx-get "/api/add-template-form"
+			(:button :class "uk-button uk-button-secondary"
+				 ;;:data-hx-get "/api/add-rules-form"
 				 :data-hx-target "#template-modal-content"
 				 :data-hx-swap "innerHTML"
-				 :data-uk-toggle "target: #template-modal" "Add Template"))
+				 :data-uk-toggle "target: #template-modal" "Add Template")
+			(:button :class "uk-button uk-button-secondary"
+				 :data-hx-get (format nil "/api/templates/~A" project-name) 
+				 :data-hx-target "#templates-view"
+				 :data-hx-swap "innerHTML" "Reload templates"))
+			
 
 		  ;; Modal for Adding/Editing Templates
-		  (:div :id "template-modal" :data-uk-modal t
-			(:div :class "uk-modal-dialog uk-modal-body"
-			      (:h2 :class "uk-modal-title" "Add/Edit Template")
-			      (:div :id "template-modal-content"
-				    (:p "Loading template form..."))))
-
+		  (modal-add-edit-templates project-name)
 		  
 
 		  ;; Rule Management (HTMX Integration)
@@ -71,7 +72,7 @@
 		  	;; Add Template Button (HTMX Integration)
 			(:button :class "uk-button uk-button-secondary"
 				 ;;:data-hx-get "/api/add-rules-form"
-				 :data-hx-target "#template-modal-content"
+				 :data-hx-target "#rule-modal-content"
 				 :data-hx-swap "innerHTML"
 				 :data-uk-toggle "target: #rule-modal" "Add Rule")
 			(:button :class "uk-button uk-button-secondary"
@@ -155,6 +156,76 @@
 
 
 
+(defun modal-add-edit-templates (project-name)
+  (spinneret:with-html
+    (:div :id "template-modal" :data-uk-modal t
+      (:div :class "uk-modal-dialog uk-modal-body"
+        (:h2 :class "uk-modal-title" "Agregar/Editar Template")
+        (:form :id "template-form" :class "uk-form-stacked"
+          ;; Nombre del template
+          (:div :class "uk-margin"
+            (:label :class "uk-form-label" :for "template-name" "Nombre del template")
+            (:div :class "uk-form-controls"
+              (:input :class "uk-input" :id "template-name" :name "templateName" :type "text"
+                      :placeholder "Ejemplo: template-1" :required t)))
+          ;; Condición (Ace Editor)
+          (:div :class "uk-margin"
+            (:label :class "uk-form-label" :for "template-body" "Body")
+            (:div :class "uk-form-controls"
+              (:div :id "template-body-editor" :style "height: 150px; border: 1px solid #ddd; background-color: #f9f9f9;")))
+          (:input :type "hidden" :name "projectName" :value project-name)
+          ;; Botones
+          (:div :class "uk-margin"
+            (:button :class "uk-button uk-button-primary" :type "submit" "Guardar")
+            (:button :class "uk-button uk-button-default uk-modal-close" :type "button" "Cancelar"))
+          (:div :id "template-response-message")))
+      
+      ;; Initialize Ace Editors
+      (:raw "
+        <script>
+          // Declarar variables globales para los editores
+          var conditionEditor;
+
+          // Initialize Ace Editors when the modal is shown
+          UIkit.util.on('#template-modal', 'show', function() {
+            // Initialize Condition Editor
+            conditionEditor = ace.edit('template-body-editor');
+            conditionEditor.session.setMode('ace/mode/lisp');
+            conditionEditor.setOptions({
+              maxLines: 10,
+              minLines: 5,
+              fontSize: '14px',
+              showGutter: false
+            });
+          });
+
+          // Manejar el envío del formulario
+          document.getElementById('template-form').addEventListener('submit', function(event) {
+            event.preventDefault(); // Evitar el envío del formulario
+
+            // Obtener el contenido de los editores
+            var conditionContent = conditionEditor.getValue();
+            var projectName = document.querySelector('input[name=\"projectName\"]').value;
+
+            // Agregar el contenido a campos ocultos o enviarlo mediante HTMX
+            console.log('Template Body:', conditionContent);
+
+            // Ejemplo: Enviar datos al servidor usando HTMX
+            htmx.ajax('POST', '/api/add-template', {
+              values: {
+                templateName: document.getElementById('template-name').value,
+                templateBody: conditionContent,
+                projectName: projectName // Incluir el nombre del proyecto
+              },
+              target: '#template-response-message', // Actualizar el contenedor de mensajes
+              swap: 'innerHTML' // Reemplazar el contenido del contenedor
+            });
+          });
+        </script>
+      "))))
+
+
+
 (defun modal-add-edit-rules (project-name)
   (spinneret:with-html
     (:div :id "rule-modal" :data-uk-modal t
@@ -182,7 +253,7 @@
 		       (:div :class "uk-margin"
 			     (:button :class "uk-button uk-button-primary" :type "submit" "Guardar")
 			     (:button :class "uk-button uk-button-default uk-modal-close" :type "button" "Cancelar"))
-		       (:div :id "response-message")))
+		       (:div :id "rule-response-message")))
 	  
 	  ;; Initialize Ace Editors
 	  ;; Initialize Ace Editors
@@ -235,7 +306,7 @@
                 projectName: projectName // Incluir el nombre del proyecto 
 
               },
-               target: '#response-message', // Actualizar el contenedor de mensajes
+               target: '#rule-response-message', // Actualizar el contenedor de mensajes
                swap: 'innerHTML' // Reemplazar el contenido del contenedor
             });
           });

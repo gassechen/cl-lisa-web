@@ -1,1 +1,57 @@
 ;; Templates for project sadsa
+(detemplate buevo ()
+  (a a a a )
+ 
+ )
+
+(deftemplate ccc ()
+  (a a a a )
+(b b b b )
+)
+(deftemplate ccc ()
+  (a a a a )
+(b b b b ))
+(deftemplate ccca ()
+ (a a a a )
+(b b b b ))
+(deftemplate cccad ()
+(a a a a )
+(b b b b ))
+(deftemplate cccad ()
+  (a a a a )
+(b b b b )
+    
+)
+
+(deftemplate cccad ()
+  (a a a a )
+(b b b b )
+    
+)
+
+(deftemplate cccad ()
+  (a a a a )
+(b b b b )
+)
+(deftemplate cccad ()
+  (a a a a )
+(b b b b ))
+(deftemplate cccad ()
+  (a a a a )
+(b b b b ) )
+(deftemplate cccad ()
+ (a a a a )
+(b b b b ))
+(deftemplate cccad ()
+    (a a a a )
+    (b b b b )
+)
+
+(deftemplate cccad ()
+    (a a a a )    (b b b b ))
+
+(deftemplate cccad ()
+    (a a a a )
+    (b b b b )
+)
+
