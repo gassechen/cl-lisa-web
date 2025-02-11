@@ -54,8 +54,11 @@
 			(:button :class "uk-button uk-button-secondary"
 				 :onclick "edit_templates();"
 				 "Edit templates")
+			(:button :id "evalTemplates" :class "uk-button uk-button-secondary" :disabled t
+				 :onclick (format nil "eval_templates('~a');" project-name)
+				 "Eval templates")
 			(:button :class "uk-button uk-button-secondary"
-				 :onclick "save_templates();"
+				 :onclick (format nil "save_templates('~a');" project-name)
 				 "Save templates")
 			;;(:button :class "uk-button uk-button-secondary"
 			;;	 :data-hx-get (format nil "/api/templates/~A" project-name) 
@@ -65,7 +68,7 @@
 			
 
 		  ;; Modal for Adding/Editing Templates
-		  (modal-add-edit-templates project-name)
+		  ;;(modal-add-edit-templates project-name)
 		  
 
 		  ;; Rule Management (HTMX Integration)
@@ -81,21 +84,12 @@
 				 :onclick "edit_rules();"
 				 "Edit rules")
 			(:button :class "uk-button uk-button-secondary"
-				 :onclick "save_rules();"
+				 :onclick (format nil "save_rules('~a');" project-name)
 				 "Save rules")
-			(:button :class "uk-button uk-button-secondary"
-				 ;;:data-hx-get "/api/add-rules-form"
-				 :data-hx-target "#rule-modal-content"
-				 :data-hx-swap "innerHTML"
-				 :data-uk-toggle "target: #rule-modal" "Add Rule")
-			(:button :class "uk-button uk-button-secondary"
-				 :data-hx-get (format nil "/api/rules/~A" project-name) 
-				 :data-hx-target "#rules-view"
-				 :data-hx-swap "innerHTML" "Reload Rules")
 			(:div :id "rule-response-message"))
 
 		  ;; Modal for Adding/Editing Rules
-		 (modal-add-edit-rules project-name)
+		  ;;(modal-add-edit-rules project-name)
 
 		  ;; System Execution (HTMX Integration)
 		  (:div :class "uk-card uk-card-default uk-card-body"
@@ -166,7 +160,10 @@
             });
           });
 
-function edit_templates() {conditionEditor = ace.edit('templates-view');
+function edit_templates() {
+            document.getElementById('evalTemplates').disabled = false;
+            conditionEditor = ace.edit('templates-view');
+conditionEditor.setTheme('ace/theme/github');
             conditionEditor.session.setMode('ace/mode/lisp');
             conditionEditor.setOptions({
               maxLines: 10,
@@ -176,13 +173,14 @@ function edit_templates() {conditionEditor = ace.edit('templates-view');
             });}
 
 
-function save_templates(){
+function save_templates(projectName){
 
             // Obtener el contenido de los editores
             var conditionContent = conditionEditor.getValue();
-            var projectName = document.querySelector('input[name=\"projectName\"]').value;
+            var projectName = projectName;
 
             // Agregar el contenido a campos ocultos o enviarlo mediante HTMX
+            console.log('projectName Body:', projectName);
             console.log('Template Body:', conditionContent);
 
             // Ejemplo: Enviar datos al servidor usando HTMX
@@ -196,21 +194,42 @@ function save_templates(){
             });}
 
 
+function eval_templates(projectName){
+            var conditionContent = conditionEditor.getValue();
+            var projectName = projectName;
+
+            // Agregar el contenido a campos ocultos o enviarlo mediante HTMX
+            console.log('Template Body:', conditionContent);
+console.log('projectName:', projectName);
+
+            // Ejemplo: Enviar datos al servidor usando HTMX
+            htmx.ajax('POST', '/api/eval-template', {
+              values: {
+                templateBody: conditionContent,
+                projectName: projectName // Incluir el nombre del proyecto
+              },
+              target: '#template-response-message', // Actualizar el contenedor de mensajes
+              swap: 'innerHTML' // Reemplazar el contenido del contenedor
+            });}
+
+
+
+
 function edit_rules() {conditionEditor = ace.edit('rules-view');
             conditionEditor.session.setMode('ace/mode/lisp');
             conditionEditor.setOptions({
               maxLines: 10,
               minLines: 5,
               fontSize: '14px',
-              showGutter: false
+              showGutter: false,
             });}
 
 
-function save_rules(){
+function save_rules(projectName){
 
             // Obtener el contenido de los editores
             var conditionContent = conditionEditor.getValue();
-            var projectName = document.querySelector('input[name=\"projectName\"]').value;
+            var projectName = projectName;
 
             // Agregar el contenido a campos ocultos o enviarlo mediante HTMX
             console.log('Template Body:', conditionContent);
@@ -224,6 +243,7 @@ function save_rules(){
               target: '#rule-response-message', // Actualizar el contenedor de mensajes
               swap: 'innerHTML' // Reemplazar el contenido del contenedor
             });}
+
 
 
 

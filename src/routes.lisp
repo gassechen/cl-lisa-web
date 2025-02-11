@@ -58,7 +58,6 @@
     (if (uiop:file-exists-p rules-file-path)
         ;; Leer el contenido del archivo
         (with-open-file (stream rules-file-path
-                                :direction :input
                                 :element-type 'character)
           (let ((content (loop for line = (read-line stream nil)
                                while line
@@ -147,10 +146,12 @@
           (save-template-to-file project-name template-body)
           (spinneret:with-html-string
             (:div :class "uk-alert uk-alert-success" :data-uk-alert t
+		  (:a :class "uk-alert-close"  :data-uk-close t)
                   (:p (format nil "Saved")))))
         ;; Si falta algún campo, devolver un mensaje de error
         (spinneret:with-html-string
           (:div :class "uk-alert uk-alert-danger" :data-uk-alert t
+		(:a :class "uk-alert-close"  :data-uk-close t)
                 (:p "Error: Todos los campos son obligatorios."))))))
 
 
@@ -169,7 +170,61 @@
                             :if-exists :supersede
                             :if-does-not-exist :create)
       (format stream "~a ~%" template-body))))
-      
+
+
+(easy-routes:defroute api-eval-template ("/api/eval-template" :method :post) ()
+  "Procesa los datos del formulario para evaluar una plantilla."
+  (let* ((params (hunchentoot:post-parameters*)) ; Obtener los parámetros POST
+         (project-name (cdr (assoc "projectName" params :test #'string=))))
+
+
+    (print params)
+    ;; Validar que todos los campos estén presentes
+    (if project-name
+        (handler-case
+            ;; Intentar evaluar la plantilla
+            (progn
+              (eval-template project-name)
+              (spinneret:with-html-string
+                (:div :class "uk-alert uk-alert-success" :data-uk-alert t
+                      (:a :class "uk-alert-close" :data-uk-close t)
+                      (:p "La plantilla se ha evaluado correctamente."))))
+          ;; Manejar errores durante la evaluación
+          (error (e)
+            (spinneret:with-html-string
+              (:div :class "uk-alert uk-alert-danger" :data-uk-alert t
+                    (:a :class "uk-alert-close" :data-uk-close t)
+                    (:p (format nil "Error al evaluar la plantilla: ~a" e))))))
+        ;; Si falta algún campo, devolver un mensaje de error
+        (spinneret:with-html-string
+          (:div :class "uk-alert uk-alert-danger" :data-uk-alert t
+                (:a :class "uk-alert-close" :data-uk-close t)
+                (:p "Error: Todos los campos son obligatorios."))))))
+
+
+(defun eval-template (project-name )
+  "Evalúa el contenido de una plantilla en el contexto del proyecto especificado."
+  (let* ((base-path (merge-pathnames "projects/" (asdf:system-source-directory :cl-lisa-web)))
+         (project-path (merge-pathnames (format nil "~a/" project-name) base-path))
+         (templates-file-path (merge-pathnames "templates.lisp" project-path)))
+    ;; Asegurarse de que el archivo exista
+    (unless (uiop:file-exists-p templates-file-path)
+      (error "El archivo de plantillas no existe para el proyecto '~a'." project-name))
+    ;; Leer el contenido del archivo
+    (let ((template-content (uiop:read-file-string templates-file-path)))
+      ;; Evaluar el contenido en un entorno seguro
+      (safe-eval template-content))))
+
+
+(defun safe-eval (code)
+  "Evalúa el código en un entorno restringido para mayor seguridad."
+  (let ((*package* (find-package :cl-lisa-web))) ; Restringir el paquete
+    (eval (read-from-string code))))
+
+
+
+
+
 
 
 (easy-routes:defroute add-rule ("/api/save-rule" :method :post) ()
@@ -177,8 +232,6 @@
   (let* ((params (hunchentoot:post-parameters*)) ; Obtener los parámetros POST
 	 (project-name (cdr (assoc "projectName" params :test #'string=)))
          (rule-condition (cdr (assoc "ruleBody" params :test #'string=))))
-
-    (print rule-condition)
     ;; Validar que todos los campos estén presentes
     (if rule-condition
         ;; Guardar la regla y devolver un mensaje de éxito
@@ -186,11 +239,13 @@
           (save-rule-to-file project-name rule-condition )
           (spinneret:with-html-string
             (:div :class "uk-alert uk-alert-success" :data-uk-alert t
-                  (:p ("Saved Rules"))))
+		  (:a :class "uk-alert-close"  :data-uk-close t)
+                  (:p ("Saved Rules")))))
         ;; Si falta algún campo, devolver un mensaje de error
         (spinneret:with-html-string
           (:div :class "uk-alert uk-alert-danger" :data-uk-alert t
-                (:p "Error: Todos los campos son obligatorios.")))))))
+		(:a :class "uk-alert-close"  :data-uk-close t)
+                (:p "Error: Todos los campos son obligatorios."))))))
 
 
 

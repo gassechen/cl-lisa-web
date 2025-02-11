@@ -1,14 +1,12 @@
-(deftemplate aaa()
-(bbb ccc))
+(+ 2 2)
+
      
 
-(deftemplate asdsaaaa()
-(bbb ccc))
-     
      
 
-(deftemplate  tatata()
-(bbb ccc))     
+     
+
+     
 
      
 
