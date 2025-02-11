@@ -55,3 +55,7 @@
     (b b b b )
 )
 
+(deftemplate buevo ()
+    (dsdfsdsfsd)
+)
+

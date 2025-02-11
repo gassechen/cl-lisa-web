@@ -15,4 +15,19 @@
   (a a)
   =>
   (b b))
+  
+  (defrule pump-sadasdas()
+  (a a)
+  =>
+  (b b))
+  
+  
+  (defrule pump-sadasdas()
+  (a xxxxxa)
+  =>
+  (b b))
 
+
+
+
+    

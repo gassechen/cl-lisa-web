@@ -135,20 +135,19 @@
   (get-templates-from-project project-name))
 
 
-(easy-routes:defroute add-template ("/api/add-template" :method :post) ()
+(easy-routes:defroute save-template ("/api/save-template" :method :post) ()
   "Procesa los datos del formulario para agregar una nueva template."
   (let* ((params (hunchentoot:post-parameters*)) ; Obtener los parámetros POST
 	 (project-name (cdr (assoc "projectName" params :test #'string=)))
-         (template-name (cdr (assoc "templateName" params :test #'string=)))
          (template-body (cdr (assoc "templateBody" params :test #'string=))))
      ; Validar que todos los campos estén presentes
-    (if (and template-name template-body)
+    (if template-body
         ;; Guardar la regla y devolver un mensaje de éxito
         (progn
-          (save-template-to-file project-name template-name template-body)
+          (save-template-to-file project-name template-body)
           (spinneret:with-html-string
             (:div :class "uk-alert uk-alert-success" :data-uk-alert t
-                  (:p (format nil "Template '~a' agregada correctamente." template-name)))))
+                  (:p (format nil "Saved")))))
         ;; Si falta algún campo, devolver un mensaje de error
         (spinneret:with-html-string
           (:div :class "uk-alert uk-alert-danger" :data-uk-alert t
@@ -156,7 +155,7 @@
 
 
 
-(defun save-template-to-file (project-name template-name template-body )
+(defun save-template-to-file (project-name template-body )
   "Guarda una nueva template en el archivo 'templates.lisp' del proyecto actual."
   (let* ((project-name project-name) ; Reemplaza esto con el nombre del proyecto actual
          (base-path (merge-pathnames "projects/" (asdf:system-source-directory :cl-lisa-web)))
@@ -167,41 +166,35 @@
     ;; Agregar la nueva regla al archivo
     (with-open-file (stream templates-file-path
                             :direction :output
-                            :if-exists :append
+                            :if-exists :supersede
                             :if-does-not-exist :create)
-
-      (format stream "(deftemplate ~a ()~%~{  ~a~%~})~%~%"
-              template-name
-              (indent-lines template-body)))))
+      (format stream "~a ~%" template-body))))
       
 
 
-
-
-
-(easy-routes:defroute add-rule ("/api/add-rule" :method :post) ()
+(easy-routes:defroute add-rule ("/api/save-rule" :method :post) ()
   "Procesa los datos del formulario para agregar una nueva regla."
   (let* ((params (hunchentoot:post-parameters*)) ; Obtener los parámetros POST
 	 (project-name (cdr (assoc "projectName" params :test #'string=)))
-         (rule-name (cdr (assoc "ruleName" params :test #'string=)))
-         (rule-condition (cdr (assoc "ruleCondition" params :test #'string=)))
-         (rule-action (cdr (assoc "ruleAction" params :test #'string=))))
+         (rule-condition (cdr (assoc "ruleBody" params :test #'string=))))
+
+    (print rule-condition)
     ;; Validar que todos los campos estén presentes
-    (if (and rule-name rule-condition rule-action)
+    (if rule-condition
         ;; Guardar la regla y devolver un mensaje de éxito
         (progn
-          (save-rule-to-file project-name rule-name rule-condition rule-action)
+          (save-rule-to-file project-name rule-condition )
           (spinneret:with-html-string
             (:div :class "uk-alert uk-alert-success" :data-uk-alert t
-                  (:p (format nil "Regla '~a' agregada correctamente." rule-name)))))
+                  (:p ("Saved Rules"))))
         ;; Si falta algún campo, devolver un mensaje de error
         (spinneret:with-html-string
           (:div :class "uk-alert uk-alert-danger" :data-uk-alert t
-                (:p "Error: Todos los campos son obligatorios."))))))
+                (:p "Error: Todos los campos son obligatorios.")))))))
 
 
 
-(defun save-rule-to-file (project-name rule-name rule-condition rule-action)
+(defun save-rule-to-file (project-name rule-condition )
   "Guarda una nueva regla en el archivo 'rules.lisp' del proyecto actual."
   (let* ((project-name project-name) ; Reemplaza esto con el nombre del proyecto actual
          (base-path (merge-pathnames "projects/" (asdf:system-source-directory :cl-lisa-web)))
@@ -212,10 +205,9 @@
     ;; Agregar la nueva regla al archivo
     (with-open-file (stream rules-file-path
                             :direction :output
-                            :if-exists :append
+                            :if-exists :supersede
                             :if-does-not-exist :create)
-      (format stream "(defrule ~a ()~%  ~a~%  =>~%  ~a)~%~%"
-              rule-name rule-condition rule-action))))
+      (format stream "~a~%" rule-condition ))))
 
 
 

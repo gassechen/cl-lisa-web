@@ -46,15 +46,22 @@
 			      :style "max-height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; background-color: #f9f9f9;"
 			      (:raw (get-templates-from-project project-name)))
 			;; Add Template Button (HTMX Integration)
+			;;(:button :class "uk-button uk-button-secondary"
+			;;	 ;;:data-hx-get "/api/add-rules-form"
+			;;	 :data-hx-target "#template-modal-content"
+			;;	 :data-hx-swap "innerHTML"
+			;;	 :data-uk-toggle "target: #template-modal" "Add Template")
 			(:button :class "uk-button uk-button-secondary"
-				 ;;:data-hx-get "/api/add-rules-form"
-				 :data-hx-target "#template-modal-content"
-				 :data-hx-swap "innerHTML"
-				 :data-uk-toggle "target: #template-modal" "Add Template")
+				 :onclick "edit_templates();"
+				 "Edit templates")
 			(:button :class "uk-button uk-button-secondary"
-				 :data-hx-get (format nil "/api/templates/~A" project-name) 
-				 :data-hx-target "#templates-view"
-				 :data-hx-swap "innerHTML" "Reload templates"))
+				 :onclick "save_templates();"
+				 "Save templates")
+			;;(:button :class "uk-button uk-button-secondary"
+			;;	 :data-hx-get (format nil "/api/templates/~A" project-name) 
+			;;	 :data-hx-target "#templates-view"
+			;;	 :data-hx-swap "innerHTML" "Reload templates"))
+			(:div :id "template-response-message"))
 			
 
 		  ;; Modal for Adding/Editing Templates
@@ -71,6 +78,12 @@
 			      (:raw (get-rules-from-project project-name)))
 		  	;; Add Template Button (HTMX Integration)
 			(:button :class "uk-button uk-button-secondary"
+				 :onclick "edit_rules();"
+				 "Edit rules")
+			(:button :class "uk-button uk-button-secondary"
+				 :onclick "save_rules();"
+				 "Save rules")
+			(:button :class "uk-button uk-button-secondary"
 				 ;;:data-hx-get "/api/add-rules-form"
 				 :data-hx-target "#rule-modal-content"
 				 :data-hx-swap "innerHTML"
@@ -78,7 +91,8 @@
 			(:button :class "uk-button uk-button-secondary"
 				 :data-hx-get (format nil "/api/rules/~A" project-name) 
 				 :data-hx-target "#rules-view"
-				 :data-hx-swap "innerHTML" "Reload Rules"))
+				 :data-hx-swap "innerHTML" "Reload Rules")
+			(:div :id "rule-response-message"))
 
 		  ;; Modal for Adding/Editing Rules
 		 (modal-add-edit-rules project-name)
@@ -151,6 +165,67 @@
               consoleOutput.textContent = 'System reset. Press \"Start System\" to begin.';
             });
           });
+
+function edit_templates() {conditionEditor = ace.edit('templates-view');
+            conditionEditor.session.setMode('ace/mode/lisp');
+            conditionEditor.setOptions({
+              maxLines: 10,
+              minLines: 5,
+              fontSize: '14px',
+              showGutter: false
+            });}
+
+
+function save_templates(){
+
+            // Obtener el contenido de los editores
+            var conditionContent = conditionEditor.getValue();
+            var projectName = document.querySelector('input[name=\"projectName\"]').value;
+
+            // Agregar el contenido a campos ocultos o enviarlo mediante HTMX
+            console.log('Template Body:', conditionContent);
+
+            // Ejemplo: Enviar datos al servidor usando HTMX
+            htmx.ajax('POST', '/api/save-template', {
+              values: {
+                templateBody: conditionContent,
+                projectName: projectName // Incluir el nombre del proyecto
+              },
+              target: '#template-response-message', // Actualizar el contenedor de mensajes
+              swap: 'innerHTML' // Reemplazar el contenido del contenedor
+            });}
+
+
+function edit_rules() {conditionEditor = ace.edit('rules-view');
+            conditionEditor.session.setMode('ace/mode/lisp');
+            conditionEditor.setOptions({
+              maxLines: 10,
+              minLines: 5,
+              fontSize: '14px',
+              showGutter: false
+            });}
+
+
+function save_rules(){
+
+            // Obtener el contenido de los editores
+            var conditionContent = conditionEditor.getValue();
+            var projectName = document.querySelector('input[name=\"projectName\"]').value;
+
+            // Agregar el contenido a campos ocultos o enviarlo mediante HTMX
+            console.log('Template Body:', conditionContent);
+
+            // Ejemplo: Enviar datos al servidor usando HTMX
+            htmx.ajax('POST', '/api/save-rule', {
+              values: {
+                ruleBody: conditionContent,
+                projectName: projectName // Incluir el nombre del proyecto
+              },
+              target: '#rule-response-message', // Actualizar el contenedor de mensajes
+              swap: 'innerHTML' // Reemplazar el contenido del contenedor
+            });}
+
+
 
         </script>")))))
 
