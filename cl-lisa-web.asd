@@ -11,11 +11,13 @@
 	       :spinneret/ps
 	       :parenscript
 	       :str
+	       :Lisa
 	       :swank)
   	       
   :components ((:module "src"
                 :components
-                ((:file "routes")
+                ((:file "package")
+		 (:file "routes")
 		 (:file "project-management")
 		 (:file "server")
 		 (:file "system-execution")	 
