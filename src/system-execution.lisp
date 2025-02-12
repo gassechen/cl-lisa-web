@@ -49,10 +49,13 @@
 						(:raw (get-facts-from-project project-name)))
 					  ;; Buttons
 					  (:button :class "uk-button uk-button-secondary"
-						   :onclick "edit_facts();"
+						   :onclick "edit('facts');"
 						   "Edit facts")
+					  (:button :id "evalfacts" :class "uk-button uk-button-secondary"
+						   :onclick (format nil "eval('~a','facts');" project-name)
+						   "Eval facts")
 					  (:button :class "uk-button uk-button-secondary"
-						   :onclick (format nil "save_facts('~a');" project-name)
+						   :onclick (format nil "save('~a','facts');" project-name)
 						   "Save facts")
 					  (:div :id "facts-response-message"))))
 			     (:li 
@@ -65,15 +68,15 @@
 						(:raw (get-templates-from-project project-name)))
 					  ;; Buttons
 					  (:button :class "uk-button uk-button-secondary"
-						   :onclick "edit_templates();"
+						   :onclick "edit('templates');"
 						   "Edit templates")
-					  (:button :id "evalTemplates" :class "uk-button uk-button-secondary" :disabled t
-						   :onclick (format nil "eval_templates('~a');" project-name)
+					  (:button :id "evaltemplates" :class "uk-button uk-button-secondary" :disabled t
+						   :onclick (format nil "eval('~a','templates');" project-name)
 						   "Eval templates")
 					  (:button :class "uk-button uk-button-secondary"
-						   :onclick (format nil "save_templates('~a');" project-name)
+						   :onclick (format nil "save('~a','templates');" project-name)
 						   "Save templates")
-					  (:div :id "template-response-message"))))
+					  (:div :id "templates-response-message"))))
 			     (:li
 			      (:a :class "uk-accordion-title" "Rule Management")
 			      (:div :class "uk-accordion-content"
@@ -84,12 +87,15 @@
 						(:raw (get-rules-from-project project-name)))
 					  ;; Buttons
 					  (:button :class "uk-button uk-button-secondary"
-						   :onclick "edit_rules();"
+						   :onclick "edit('rules');"
 						   "Edit rules")
+					  (:button :id "evalrules" :class "uk-button uk-button-secondary" :disabled t
+						   :onclick (format nil "eval('~a','rules');" project-name)
+						   "Eval rules")
 					  (:button :class "uk-button uk-button-secondary"
-						   :onclick (format nil "save_rules('~a');" project-name)
+						   :onclick (format nil "save('~a','rules');" project-name)
 						   "Save rules")
-					  (:div :id "rule-response-message"))))
+					  (:div :id "rules-response-message"))))
 			     (:li
 			      (:a :class "uk-accordion-title" "Functions Management")
 			      (:div :class "uk-accordion-content"
@@ -100,10 +106,13 @@
 						(:raw (get-functions-from-project project-name)))
 					  ;; Buttons
 					  (:button :class "uk-button uk-button-secondary"
-						   :onclick "edit_functions();"
+						   :onclick "edit('functions');"
 						   "Edit functions")
+					  (:button :id "evalfunctions" :class "uk-button uk-button-secondary" :disabled t
+						   :onclick (format nil "eval('~a','functions');" project-name)
+						   "Eval functions")
 					  (:button :class "uk-button uk-button-secondary"
-						   :onclick (format nil "save_functions('~a');" project-name)
+						   :onclick (format nil "save('~a','functions');" project-name)
 						   "Save functions")
 					  (:div :id "functions-response-message"))))))
 
@@ -181,10 +190,14 @@
             });
           });
 
-function edit_templates() {
-            document.getElementById('evalTemplates').disabled = false;
-            conditionEditor = ace.edit('templates-view');
-conditionEditor.setTheme('ace/theme/github');
+
+//////////////////////////////
+
+function edit(param) {
+            document.getElementById('eval'+param).disabled = false;
+            let typeForm = param;
+            conditionEditor = ace.edit(param+'-view');
+            conditionEditor.setTheme('ace/theme/github');
             conditionEditor.session.setMode('ace/mode/lisp');
             conditionEditor.setOptions({
               maxLines: 10,
@@ -194,23 +207,24 @@ conditionEditor.setTheme('ace/theme/github');
             });}
 
 
-function save_templates(projectName){
+function save(projectName,param){
 
             // Obtener el contenido de los editores
             var conditionContent = conditionEditor.getValue();
             var projectName = projectName;
+            var api=param;
 
             // Agregar el contenido a campos ocultos o enviarlo mediante HTMX
             console.log('projectName Body:', projectName);
             console.log('Template Body:', conditionContent);
 
             // Ejemplo: Enviar datos al servidor usando HTMX
-            htmx.ajax('POST', '/api/save-template', {
+            htmx.ajax('POST', '/api/save-'+api, {
               values: {
-                templateBody: conditionContent,
+                content: conditionContent,
                 projectName: projectName // Incluir el nombre del proyecto
               },
-              target: '#template-response-message', // Actualizar el contenedor de mensajes
+              target: '#'+param+'-response-message', // Actualizar el contenedor de mensajes
               swap: 'innerHTML' // Reemplazar el contenido del contenedor
             });}
 
@@ -218,32 +232,17 @@ function save_templates(projectName){
 function eval_templates(projectName){
             var conditionContent = conditionEditor.getValue();
             var projectName = projectName;
-
-            // Agregar el contenido a campos ocultos o enviarlo mediante HTMX
-            console.log('Template Body:', conditionContent);
-console.log('projectName:', projectName);
-
+   
             // Ejemplo: Enviar datos al servidor usando HTMX
             htmx.ajax('POST', '/api/eval-template', {
               values: {
-                templateBody: conditionContent,
+                content: conditionContent,
                 projectName: projectName // Incluir el nombre del proyecto
               },
               target: '#template-response-message', // Actualizar el contenedor de mensajes
               swap: 'innerHTML' // Reemplazar el contenido del contenedor
             });}
 
-
-
-
-function edit_rules() {conditionEditor = ace.edit('rules-view');
-            conditionEditor.session.setMode('ace/mode/lisp');
-            conditionEditor.setOptions({
-              maxLines: 10,
-              minLines: 5,
-              fontSize: '14px',
-              showGutter: false,
-            });}
 
 
 function save_rules(projectName){

@@ -270,15 +270,13 @@
 
 
 
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;SAVE ROUTES;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(easy-routes:defroute save-template ("/api/save-template" :method :post) ()
+(easy-routes:defroute save("/api/save-templates" :method :post) ()
   "Procesa los datos del formulario para agregar una nueva template."
   (let* ((params (hunchentoot:post-parameters*)) ; Obtener los parámetros POST
 	 (project-name (cdr (assoc "projectName" params :test #'string=)))
-         (template-body (cdr (assoc "templateBody" params :test #'string=))))
+         (template-body (cdr (assoc "content" params :test #'string=))))
      ; Validar que todos los campos estén presentes
     (if template-body
         ;; Guardar la regla y devolver un mensaje de éxito
