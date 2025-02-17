@@ -46,12 +46,12 @@
 					  ;; List of Rules (Dynamic Updates with HTMX)
 					  (:div :id "facts-view"
 						:style "max-height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; background-color: #f9f9f9;"
-						(:raw (get-facts-from-project project-name)))
+						(:raw (get-data-from-project project-name "facts")))
 					  ;; Buttons
 					  (:button :class "uk-button uk-button-secondary"
 						   :onclick "edit('facts');"
 						   "Edit facts")
-					  (:button :id "evalfacts" :class "uk-button uk-button-secondary"
+					  (:button :id "evalfacts" :class "uk-button uk-button-secondary" :disabled t
 						   :onclick (format nil "eval('~a','facts');" project-name)
 						   "Eval facts")
 					  (:button :class "uk-button uk-button-secondary"
@@ -65,7 +65,7 @@
 					  ;; List of Templates (Dynamic Updates with HTMX)
 					  (:div :id "templates-view"
 						:style "max-height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; background-color: #f9f9f9;"
-						(:raw (get-templates-from-project project-name)))
+						(:raw (get-data-from-project project-name "templates")))
 					  ;; Buttons
 					  (:button :class "uk-button uk-button-secondary"
 						   :onclick "edit('templates');"
@@ -84,7 +84,7 @@
 					  ;; List of Rules (Dynamic Updates with HTMX)
 					  (:div :id "rules-view"
 						:style "max-height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; background-color: #f9f9f9;"
-						(:raw (get-rules-from-project project-name)))
+						(:raw (get-data-from-project project-name "rules")))
 					  ;; Buttons
 					  (:button :class "uk-button uk-button-secondary"
 						   :onclick "edit('rules');"
@@ -103,7 +103,7 @@
 					  ;; List of Rules (Dynamic Updates with HTMX)
 					  (:div :id "functions-view"
 						:style "max-height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; background-color: #f9f9f9;"
-						(:raw (get-functions-from-project project-name)))
+						(:raw (get-data-from-project project-name "functions")))
 					  ;; Buttons
 					  (:button :class "uk-button uk-button-secondary"
 						   :onclick "edit('functions');"
@@ -219,7 +219,7 @@ function save(projectName,param){
             console.log('Template Body:', conditionContent);
 
             // Ejemplo: Enviar datos al servidor usando HTMX
-            htmx.ajax('POST', '/api/save-'+api, {
+            htmx.ajax('POST', '/api/save/'+api, {
               values: {
                 content: conditionContent,
                 projectName: projectName // Incluir el nombre del proyecto
@@ -229,42 +229,20 @@ function save(projectName,param){
             });}
 
 
-function eval_templates(projectName){
+function eval(projectName,param){
             var conditionContent = conditionEditor.getValue();
             var projectName = projectName;
+            var api=param;
    
             // Ejemplo: Enviar datos al servidor usando HTMX
-            htmx.ajax('POST', '/api/eval-template', {
+            htmx.ajax('POST', '/api/eval/'+api, {
               values: {
                 content: conditionContent,
                 projectName: projectName // Incluir el nombre del proyecto
               },
-              target: '#template-response-message', // Actualizar el contenedor de mensajes
+              target: '#'+param+'-response-message', // Actualizar el contenedor de mensajes
               swap: 'innerHTML' // Reemplazar el contenido del contenedor
             });}
-
-
-
-function save_rules(projectName){
-
-            // Obtener el contenido de los editores
-            var conditionContent = conditionEditor.getValue();
-            var projectName = projectName;
-
-            // Agregar el contenido a campos ocultos o enviarlo mediante HTMX
-            console.log('Template Body:', conditionContent);
-
-            // Ejemplo: Enviar datos al servidor usando HTMX
-            htmx.ajax('POST', '/api/save-rule', {
-              values: {
-                ruleBody: conditionContent,
-                projectName: projectName // Incluir el nombre del proyecto
-              },
-              target: '#rule-response-message', // Actualizar el contenedor de mensajes
-              swap: 'innerHTML' // Reemplazar el contenido del contenedor
-            });}
-
-
 
 
         </script>")))))

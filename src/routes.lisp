@@ -62,11 +62,11 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;GET FUNCTIONS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun get-facts-from-project (project-name)
-  "Carga y devuelve el contenido del archivo 'facts.lisp' del proyecto especificado."
+(defun get-data-from-project (project-name resource)
   (let* ((base-path (merge-pathnames "projects/" (asdf:system-source-directory :cl-lisa-web)))
          (project-path (merge-pathnames (format nil "~a/" project-name) base-path))
-         (templates-file-path (merge-pathnames "facts.lisp" project-path)))
+	 (res (concatenate 'string resource ".lisp"))
+         (templates-file-path (merge-pathnames res project-path)))
     ;; Verificar si el archivo existe
     (if (uiop:file-exists-p templates-file-path)
         ;; Leer el contenido del archivo
@@ -79,78 +79,16 @@
 	     (format nil "<pre>~a</pre>" (format nil "~{~a~%~}" content))))
             
         ;; Si el archivo no existe, devolver un mensaje de error
-        (format nil "Error: No facts file found for project '~a'." project-name))))
-
-
-(defun get-templates-from-project (project-name)
-  "Carga y devuelve el contenido del archivo 'templates.lisp' del proyecto especificado."
-  (let* ((base-path (merge-pathnames "projects/" (asdf:system-source-directory :cl-lisa-web)))
-         (project-path (merge-pathnames (format nil "~a/" project-name) base-path))
-         (templates-file-path (merge-pathnames "templates.lisp" project-path)))
-    ;; Verificar si el archivo existe
-    (if (uiop:file-exists-p templates-file-path)
-        ;; Leer el contenido del archivo
-        (with-open-file (stream templates-file-path
-                                :direction :input
-                                :element-type 'character)
-          (let ((content (loop for line = (read-line stream nil)
-                               while line
-                               collect line)))
-	     (format nil "<pre>~a</pre>" (format nil "~{~a~%~}" content))))
-            
-        ;; Si el archivo no existe, devolver un mensaje de error
-        (format nil "Error: No templates file found for project '~a'." project-name))))
-
-
-(defun get-rules-from-project (project-name)
-  "Carga y devuelve el contenido del archivo 'rules.lisp' del proyecto especificado."
-  (let* ((base-path (merge-pathnames "projects/" (asdf:system-source-directory :cl-lisa-web)))
-         (project-path (merge-pathnames (format nil "~a/" project-name) base-path))
-         (rules-file-path (merge-pathnames "rules.lisp" project-path)))
-    ;; Verificar si el archivo existe
-    (if (uiop:file-exists-p rules-file-path)
-        ;; Leer el contenido del archivo
-        (with-open-file (stream rules-file-path
-                                :element-type 'character)
-          (let ((content (loop for line = (read-line stream nil)
-                               while line
-                               collect line)))
-	     (format nil "<pre>~a</pre>" (format nil "~{~a~%~}" content))))
-            
-        ;; Si el archivo no existe, devolver un mensaje de error
-        (format nil "Error: No rules file found for project '~a'." project-name))))
-
-
-
-(defun get-functions-from-project (project-name)
-  "Carga y devuelve el contenido del archivo 'functions.lisp' del proyecto especificado."
-  (let* ((base-path (merge-pathnames "projects/" (asdf:system-source-directory :cl-lisa-web)))
-         (project-path (merge-pathnames (format nil "~a/" project-name) base-path))
-         (rules-file-path (merge-pathnames "functions.lisp" project-path)))
-    ;; Verificar si el archivo existe
-    (if (uiop:file-exists-p rules-file-path)
-        ;; Leer el contenido del archivo
-        (with-open-file (stream rules-file-path
-                                :element-type 'character)
-          (let ((content (loop for line = (read-line stream nil)
-                               while line
-                               collect line)))
-	     (format nil "<pre>~a</pre>" (format nil "~{~a~%~}" content))))
-            
-        ;; Si el archivo no existe, devolver un mensaje de error
-        (format nil "Error: No functions file found for project '~a'." project-name))))
-
-
-
+        (format nil "Error: No file found for project '~a'." project-name))))
 
 ;;;;;;;;;;;;;;;;;;;;;;; SAVE FUNCTIONS;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun save-template-to-file (project-name template-body )
-  "Guarda una nueva template en el archivo 'templates.lisp' del proyecto actual."
+(defun save-to-file (project-name template-body resource)
   (let* ((project-name project-name) ; Reemplaza esto con el nombre del proyecto actual
          (base-path (merge-pathnames "projects/" (asdf:system-source-directory :cl-lisa-web)))
          (project-path (merge-pathnames (format nil "~a/" project-name) base-path))
-         (templates-file-path (merge-pathnames "templates.lisp" project-path)))
+	 (res (concatenate 'string resource ".lisp"))
+         (templates-file-path (merge-pathnames res project-path)))
     ;; Asegurarse de que el archivo exista
     (ensure-directories-exist templates-file-path)
     ;; Agregar la nueva regla al archivo
@@ -161,48 +99,21 @@
       (format stream "~a ~%" template-body))))
 
 
-
-(defun save-rule-to-file (project-name rule-condition )
-  "Guarda una nueva regla en el archivo 'rules.lisp' del proyecto actual."
-  (let* ((project-name project-name) ; Reemplaza esto con el nombre del proyecto actual
-         (base-path (merge-pathnames "projects/" (asdf:system-source-directory :cl-lisa-web)))
-         (project-path (merge-pathnames (format nil "~a/" project-name) base-path))
-         (rules-file-path (merge-pathnames "rules.lisp" project-path)))
-    ;; Asegurarse de que el archivo exista
-    (ensure-directories-exist rules-file-path)
-    ;; Agregar la nueva regla al archivo
-    (with-open-file (stream rules-file-path
-                            :direction :output
-                            :if-exists :supersede
-                            :if-does-not-exist :create)
-      (format stream "~a~%" rule-condition ))))
-
-
-
-
-(defun indent-lines (text)
-  "Aplica una indentación de dos espacios a cada línea del texto."
-  (mapcar (lambda (line)
-            (if (> (length line) 0)
-                (concatenate 'string "  " line)
-                ""))
-          (split-sequence:split-sequence #\Newline text)))
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;EVAL FUNCTIONS;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun eval-template (project-name )
+(defun eval-form (project-name resource)
   "Evalúa el contenido de una plantilla en el contexto del proyecto especificado."
   (let* ((base-path (merge-pathnames "projects/" (asdf:system-source-directory :cl-lisa-web)))
          (project-path (merge-pathnames (format nil "~a/" project-name) base-path))
-         (templates-file-path (merge-pathnames "templates.lisp" project-path)))
+	 (res (concatenate 'string resource ".lisp"))
+         (templates-file-path (merge-pathnames res project-path)))
     ;; Asegurarse de que el archivo exista
     (unless (uiop:file-exists-p templates-file-path)
-      (error "El archivo de plantillas no existe para el proyecto '~a'." project-name))
+      (error "El archivo no existe para el proyecto '~a'." project-name))
     ;; Leer el contenido del archivo
-    (let ((template-content (uiop:read-file-string templates-file-path)))
+    (let ((content (uiop:read-file-string templates-file-path)))
       ;; Evaluar el contenido en un entorno seguro
-      (safe-eval template-content))))
+      (safe-eval content))))
 
 
 (defun safe-eval (code)
@@ -245,81 +156,31 @@
   (render-system-execution-page x))
 
 
-
-;;;;;;;;;;;;;;;;;;;; LOAD ROUTES ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(easy-routes:defroute load-facts ("/api/facts/:project-name" :method :get)()
-  "Carga la lista de facts."
-  (setf (hunchentoot:content-type*) "text/html")
-  (get-facts-from-project project-name))
-
-(easy-routes:defroute load-templates ("/api/templates/:project-name" :method :get)()
-  "Carga la lista de templates."
-  (setf (hunchentoot:content-type*) "text/html")
-  (get-templates-from-project project-name))
-
-(easy-routes:defroute load-rules ("/api/rules/:project-name" :method :get)()
-  "Carga la lista de reglas."
-  (setf (hunchentoot:content-type*) "text/html")
-  (get-rules-from-project project-name))
-
-(easy-routes:defroute load-fucntions ("/api/fucntions/:project-name" :method :get)()
-  "Carga la lista de fucntions."
-  (setf (hunchentoot:content-type*) "text/html")
-  (get-functions-from-project project-name))
-
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;SAVE ROUTES;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(easy-routes:defroute save("/api/save-templates" :method :post) ()
-  "Procesa los datos del formulario para agregar una nueva template."
+(easy-routes:defroute save ("/api/save/:resource" :method :post) ()
+  "Procesa los datos del formulario para guardar un recurso específico."
   (let* ((params (hunchentoot:post-parameters*)) ; Obtener los parámetros POST
-	 (project-name (cdr (assoc "projectName" params :test #'string=)))
-         (template-body (cdr (assoc "content" params :test #'string=))))
-     ; Validar que todos los campos estén presentes
-    (if template-body
-        ;; Guardar la regla y devolver un mensaje de éxito
-        (progn
-          (save-template-to-file project-name template-body)
-          (spinneret:with-html-string
-            (:div :class "uk-alert uk-alert-success" :data-uk-alert t
-		  (:a :class "uk-alert-close"  :data-uk-close t)
-                  (:p (format nil "Saved")))))
-        ;; Si falta algún campo, devolver un mensaje de error
-        (spinneret:with-html-string
-          (:div :class "uk-alert uk-alert-danger" :data-uk-alert t
-		(:a :class "uk-alert-close"  :data-uk-close t)
-                (:p "Error: Todos los campos son obligatorios."))))))
-
-
-(easy-routes:defroute save-rule ("/api/save-rule" :method :post) ()
-  "Procesa los datos del formulario para agregar una nueva regla."
-  (let* ((params (hunchentoot:post-parameters*)) ; Obtener los parámetros POST
-	 (project-name (cdr (assoc "projectName" params :test #'string=)))
-         (rule-condition (cdr (assoc "ruleBody" params :test #'string=))))
+         (project-name (cdr (assoc "projectName" params :test #'string=)))
+         (content (cdr (assoc "content" params :test #'string=))))
     ;; Validar que todos los campos estén presentes
-    (if rule-condition
-        ;; Guardar la regla y devolver un mensaje de éxito
-        (progn
-          (save-rule-to-file project-name rule-condition )
-          (spinneret:with-html-string
-            (:div :class "uk-alert uk-alert-success" :data-uk-alert t
-		  (:a :class "uk-alert-close"  :data-uk-close t)
-                  (:p ("Saved Rules")))))
-        ;; Si falta algún campo, devolver un mensaje de error
+    (if (and project-name content)
+	(progn
+	  (save-to-file project-name content resource)
+	  (spinneret:with-html-string
+                (:div :class "uk-alert uk-alert-success" :data-uk-alert t
+                      (:a :class "uk-alert-close" :data-uk-close t)
+                      (:p "Saved."))))
+	;; Si falta algún campo, devolver un mensaje de error
         (spinneret:with-html-string
           (:div :class "uk-alert uk-alert-danger" :data-uk-alert t
-		(:a :class "uk-alert-close"  :data-uk-close t)
+                (:a :class "uk-alert-close" :data-uk-close t)
                 (:p "Error: Todos los campos son obligatorios."))))))
-
-
-
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;EVAL ROUTES ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(easy-routes:defroute api-eval-template ("/api/eval-template" :method :post) ()
+(easy-routes:defroute api-eval ("/api/eval/:resource" :method :post) ()
   "Procesa los datos del formulario para evaluar una plantilla."
   (let* ((params (hunchentoot:post-parameters*)) ; Obtener los parámetros POST
          (project-name (cdr (assoc "projectName" params :test #'string=))))
@@ -328,7 +189,7 @@
         (handler-case
             ;; Intentar evaluar la plantilla
             (progn
-              (eval-template project-name)
+              (eval-form project-name resource)
               (spinneret:with-html-string
                 (:div :class "uk-alert uk-alert-success" :data-uk-alert t
                       (:a :class "uk-alert-close" :data-uk-close t)
@@ -346,9 +207,63 @@
                 (:p "Error: Todos los campos son obligatorios."))))))
 
 
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defun run-project (project-name)
+  "Carga los archivos del proyecto, inicializa el motor de reglas y ejecuta el programa."
+
+  (make-inference-engine)
+
+  (let* ((base-path (merge-pathnames "projects/" (asdf:system-source-directory :cl-lisa-web)))
+         (project-path (merge-pathnames (format nil "~a/" project-name) base-path))
+         (rules-file (merge-pathnames "rules.lisp" project-path))
+         (facts-file (merge-pathnames "facts.lisp" project-path))
+         (functions-file (merge-pathnames "functions.lisp" project-path))
+         (templates-file (merge-pathnames "templates.lisp" project-path)))
+    ;; Validar que los archivos existan
+    (unless (and (uiop:file-exists-p rules-file)
+                 (uiop:file-exists-p facts-file)
+                 (uiop:file-exists-p functions-file)
+                 (uiop:file-exists-p templates-file))
+      (error "Uno o más archivos requeridos no existen para el proyecto '~a'." project-name))
+    ;; Cargar los archivos en el entorno
+    (handler-case
+        (progn
+	  (load-file templates-file)
+          (load-file rules-file)
+	  ;;(load-file facts-file)
+          ;;(load-file functions-file)
+          
+          ;; Inicializar el motor de reglas
+	 
+	  ;; Verificar que las reglas y hechos se hayan cargado correctamente
+          (format nil "Hechos cargados: ~a~%" (facts))
+          (format nil "Reglas cargadas: ~a~%" (rules))
+
+	  ;; Ejecutar el programa
+	  (execute-engine))
+      ;; Manejar errores durante la ejecución
+      (error (e)
+        (error "Error al ejecutar el programa: ~a" e)))))
 
 
+(defun load-file (file-path)
+  "Carga un archivo Lisp en el entorno actual."
+  (when (uiop:file-exists-p file-path)
+    (load file-path)))
+
+
+
+(defun execute-engine () 
+  ;; Initialize the system state
+  
+  (reset)
+  (trace-project)
+  ;;(run)
+  )
+
+
+(defun trace-project()
+  (watch :activations)
+  (watch :facts)
+  (watch :rules))
