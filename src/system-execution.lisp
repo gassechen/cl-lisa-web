@@ -22,16 +22,22 @@
 			(:div :class "uk-grid-small" :data-uk-grid t
 			      (:div :class "uk-width-auto"
 				    (:button :id "start-system-btn"
-					     :data-hx-post (format nil "/api/project/run/~A" project-name)
+					     :data-hx-post (format nil "/api/project/start/~A" project-name)
+					     :data-hx-target "#result-alert"
 					     :class "uk-button uk-button-success"
 					     (:span :class "status-indicator status-stopped" :id "status-indicator")
 					     "Start System"))
 			      (:div :class "uk-width-auto"
-				    (:button :id "stop-system-btn" :class "uk-button uk-button-danger" :disabled t "Stop System"))
+				    (:button :id "stop-system-btn"
+					     :data-hx-post (format nil "/api/project/stop/~A" project-name)
+					     :data-hx-target "#result-alert"
+					     :class "uk-button uk-button-danger"
+					      "Stop System"))
 			      (:div :class "uk-width-auto"
 				    (:button :id "debug-system-btn" :class "uk-button uk-button-secondary" :disabled t "Debug"))
 			      (:div :class "uk-width-expand"
-				    (:button :id "reset-system-btn" :class "uk-button uk-button-default" "Reset System"))))
+				    (:button :id "reset-system-btn" :class "uk-button uk-button-default" "Reset System"))
+			      (:div :id "result-alert")))
 
 		  ;; Console Output (Dynamic Updates with HTMX)
 		  (:div :class "uk-card uk-card-default uk-card-body"
@@ -126,13 +132,18 @@
 		  ;; System Execution (HTMX Integration)
 		  (:div :class "uk-card uk-card-default uk-card-body"
 			(:h3 :class "uk-card-title" "Run System")
-			(:form :data-hx-post "/api/run-system" :data-hx-target "#console-output" :data-hx-swap "innerHTML" :class "uk-form-stacked"
+			(:form :data-hx-post "/api/project/run"
+			       :data-hx-target "#console-output"
+			       :data-hx-swap "innerHTML"
+			       :class "uk-form-stacked"
 			       (:div :class "uk-margin"
 				     (:label :class "uk-form-label" :for "input-data" "Input Data")
 				     (:div :class "uk-form-controls"
 					   (:textarea :class "uk-textarea" :id "input-data" :rows "4" :placeholder "Enter input data to run the system")))
 			       (:div :class "uk-margin"
-				     (:button :class "uk-button uk-button-primary" :type "submit" "Run"))))
+				     (:button
+				      :class "uk-button uk-button-primary"
+				      :type "submit" "Run"))))
 
 		  ;; Button to return to Project Management
 		  (:div :class "uk-text-center"

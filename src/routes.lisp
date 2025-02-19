@@ -208,7 +208,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun run-project (project-name)
+(defun start-project (project-name)
   "Carga los archivos del proyecto, inicializa el motor de reglas y ejecuta el programa."
   (reset)
   (clear)
@@ -232,16 +232,7 @@
 	  (load-file templates-file)
           (load-file rules-file)
 	  (load-file facts-file)
-          (load-file functions-file)
-          
-          ;; Inicializar el motor de reglas
-	 
-	  ;; Verificar que las reglas y hechos se hayan cargado correctamente
-          (format nil "Hechos cargados: ~a~%" (facts))
-          (format nil "Reglas cargadas: ~a~%" (rules))
-
-	  ;; Ejecutar el programa
-	  (execute-engine))
+          (load-file functions-file))
       ;; Manejar errores durante la ejecución
       (error (e)
         (error "Error al ejecutar el programa: ~a" e)))))
@@ -253,11 +244,9 @@
     (load file-path)))
 
 
-
-(defun execute-engine () 
+(defun run-project () 
   ;; Initialize the system state
   (trace-project)
-  (log:info "Starting run...")
   (run))
 
 
@@ -267,16 +256,12 @@
   (watch :rules))
 
 
-(easy-routes:defroute api-run-project ("/api/project/run/:project-name" :method :post) ()
+(easy-routes:defroute api-start-project ("/api/project/start/:project-name" :method :post) ()
   "Ejecuta el programa para el proyecto especificado."
   (handler-case
       (progn
-        ;; Imprimir el nombre del proyecto para depuración
-        (print project-name)
-
         ;; Ejecutar el proyecto
-        (run-project project-name)
-
+        (start-project project-name)
         ;; Devolver un mensaje de éxito
         (spinneret:with-html-string
           (:div :class "uk-alert uk-alert-success" :data-uk-alert t
@@ -288,4 +273,49 @@
         (:div :class "uk-alert uk-alert-danger" :data-uk-alert t
               (:a :class "uk-alert-close" :data-uk-close t)
               (:p (format nil "Error al ejecutar el programa: ~a" e)))))))
+
+
+
+(easy-routes:defroute api-stop-project ("/api/project/stop/:project-name" :method :post) ()
+  "Stop el programa para el proyecto especificado."
+  (handler-case
+      (progn
+        ;; Ejecutar el proyecto
+	(reset)
+	(clear)
+        (halt)
+        ;; Devolver un mensaje de éxito
+        (spinneret:with-html-string
+          (:div :class "uk-alert uk-alert-success" :data-uk-alert t
+                (:a :class "uk-alert-close" :data-uk-close t)
+                (:p (format nil "El programa se ha detenido correctamente para el proyecto '~a'." project-name)))))
+    ;; Manejar errores durante la ejecución
+    (error (e)
+      (spinneret:with-html-string
+        (:div :class "uk-alert uk-alert-danger" :data-uk-alert t
+              (:a :class "uk-alert-close" :data-uk-close t)
+              (:p (format nil "Error al ejecutar el programa: ~a" e)))))))
+
+
+
+(easy-routes:defroute api-run-project ("/api/project/run" :method :post) ()
+  "Ejecuta el programa para el proyecto especificado."
+  (handler-case
+      (progn
+        ;; Ejecutar el proyecto
+        (let ((output (with-output-to-string (*standard-output*)
+                         (run-project))))
+        ;; Devolver un mensaje de éxito
+        (spinneret:with-html-string
+          (:div (:textarea :id "output-area" :rows "10" :cols "80" :readonly t
+                             (format nil "~a" output))))))
+    ;; Manejar errores durante la ejecución
+    (error (e)
+      (spinneret:with-html-string
+        (:div :class "uk-alert uk-alert-danger" :data-uk-alert t
+              (:a :class "uk-alert-close" :data-uk-close t)
+              (:p (format nil "Error al ejecutar el programa: ~a" e)))))))
+
+
+
 
