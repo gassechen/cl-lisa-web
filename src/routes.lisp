@@ -298,23 +298,31 @@
 
 
 
+
+
 (easy-routes:defroute api-run-project ("/api/project/run" :method :post) ()
-  "Ejecuta el programa para el proyecto especificado."
-  (handler-case
-      (progn
-        ;; Ejecutar el proyecto
-        (let ((output (with-output-to-string (*standard-output*)
-                         (run-project))))
-        ;; Devolver un mensaje de éxito
-        (spinneret:with-html-string
-          (:div (:textarea :id "output-area" :rows "10" :cols "80" :readonly t
-                             (format nil "~a" output))))))
-    ;; Manejar errores durante la ejecución
-    (error (e)
-      (spinneret:with-html-string
-        (:div :class "uk-alert uk-alert-danger" :data-uk-alert t
-              (:a :class "uk-alert-close" :data-uk-close t)
-              (:p (format nil "Error al ejecutar el programa: ~a" e)))))))
+  "Procesa los datos del formulario para evaluar una plantilla."
+  (let* ((params (hunchentoot:post-parameters*))
+         (content (cdr (assoc "content" params :test #'string=))))
+
+    ;;(print content)
+    (safe-eval content)
+
+    (handler-case
+	(progn
+          ;; Ejecutar el proyecto
+          (let ((output (with-output-to-string (*standard-output*)
+                          (run-project))))
+            ;; Devolver un mensaje de éxito
+            (spinneret:with-html-string
+              (:div (:textarea :id "output-area" :rows "10" :cols "80" :readonly t
+                               (format nil "~a" output))))))
+      ;; Manejar errores durante la ejecución
+      (error (e)
+	(spinneret:with-html-string
+          (:div :class "uk-alert uk-alert-danger" :data-uk-alert t
+		(:a :class "uk-alert-close" :data-uk-close t)
+		(:p (format nil "Error al ejecutar el programa: ~a" e))))))))
 
 
 

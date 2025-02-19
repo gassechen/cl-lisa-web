@@ -36,8 +36,8 @@
 			      (:div :class "uk-width-auto"
 				    (:button :id "debug-system-btn" :class "uk-button uk-button-secondary" :disabled t "Debug"))
 			      (:div :class "uk-width-expand"
-				    (:button :id "reset-system-btn" :class "uk-button uk-button-default" "Reset System"))
-			      (:div :id "result-alert")))
+				    (:button :id "reset-system-btn" :class "uk-button uk-button-default" "Reset System")))
+			      (:div :id "result-alert"))
 
 		  ;; Console Output (Dynamic Updates with HTMX)
 		  (:div :class "uk-card uk-card-default uk-card-body"
@@ -122,32 +122,24 @@
 					  (:button :class "uk-button uk-button-secondary"
 						   :onclick (format nil "save('~a','functions');" project-name)
 						   "Save functions")
-					  (:div :id "functions-response-message"))))))
+					  (:div :id "functions-response-message"))))
 
+			     (:li
+			      (:a :class "uk-accordion-title" "Run System")
+			      (:div :class "uk-accordion-content"
+				    (:div :class "uk-card uk-card-default uk-card-body"
+					  ;; List of Rules (Dynamic Updates with HTMX)
+					  (:div :id "asserts-view"
+						:style "max-height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; background-color: #f9f9f9;")
+					  ;; Buttons
+					  (:button :class "uk-button uk-button-secondary"
+						   :onclick "edit('asserts');"
+						   "Edit Asserts")
+					  (:button :class "uk-button uk-button-primary"
+						   :onclick "run();"
+						   "Run")
 
-
-
-
-
-		  ;; System Execution (HTMX Integration)
-		  (:div :class "uk-card uk-card-default uk-card-body"
-			(:h3 :class "uk-card-title" "Run System")
-			(:form :data-hx-post "/api/project/run"
-			       :data-hx-target "#console-output"
-			       :data-hx-swap "innerHTML"
-			       :class "uk-form-stacked"
-			       (:div :class "uk-margin"
-				     (:label :class "uk-form-label" :for "input-data" "Input Data")
-				     (:div :class "uk-form-controls"
-					   (:textarea :class "uk-textarea" :id "input-data" :rows "4" :placeholder "Enter input data to run the system")))
-			       (:div :class "uk-margin"
-				     (:button
-				      :class "uk-button uk-button-primary"
-				      :type "submit" "Run"))))
-
-		  ;; Button to return to Project Management
-		  (:div :class "uk-text-center"
-			(:a :href "project-management.html" :class "uk-button uk-button-default" "Return to Project Management")))
+					  (:div :id "asserts-response-message")))))))
 
             ;; UIkit JS
             (:script :src "https://cdn.jsdelivr.net/npm/uikit@3.16.26/dist/js/uikit.min.js")
@@ -155,59 +147,9 @@
 
             ;; JavaScript for dynamic behavior
             (:raw "<script>
-          document.addEventListener('DOMContentLoaded', () => {
-            const consoleOutput = document.getElementById('console-output');
-            const statusIndicator = document.getElementById('status-indicator');
-            const startSystemBtn = document.getElementById('start-system-btn');
-            const stopSystemBtn = document.getElementById('stop-system-btn');
-            const debugSystemBtn = document.getElementById('debug-system-btn');
-            const resetSystemBtn = document.getElementById('reset-system-btn');
-
-            let systemRunning = false;
-
-            // Function to start the system
-            startSystemBtn.addEventListener('click', () => {
-              if (!systemRunning) {
-                systemRunning = true;
-                statusIndicator.classList.remove('status-stopped');
-                statusIndicator.classList.add('status-running');
-                startSystemBtn.disabled = true;
-                stopSystemBtn.disabled = false;
-                debugSystemBtn.disabled = false;
-                consoleOutput.textContent = 'System started. Waiting for commands...';
-              }
-            });
-
-            // Function to stop the system
-            stopSystemBtn.addEventListener('click', () => {
-              if (systemRunning) {
-                systemRunning = false;
-                statusIndicator.classList.remove('status-running');
-                statusIndicator.classList.add('status-stopped');
-                startSystemBtn.disabled = false;
-                stopSystemBtn.disabled = true;
-                debugSystemBtn.disabled = true;
-                consoleOutput.textContent = 'System stopped.';
-              }
-            });
-
-            // Function to reset the system
-            resetSystemBtn.addEventListener('click', () => {
-              systemRunning = false;
-              statusIndicator.classList.remove('status-running');
-              statusIndicator.classList.add('status-stopped');
-              startSystemBtn.disabled = false;
-              stopSystemBtn.disabled = true;
-              debugSystemBtn.disabled = true;
-              consoleOutput.textContent = 'System reset. Press \"Start System\" to begin.';
-            });
-          });
-
-
-//////////////////////////////
 
 function edit(param) {
-            document.getElementById('eval'+param).disabled = false;
+            
             let typeForm = param;
             conditionEditor = ace.edit(param+'-view');
             conditionEditor.setTheme('ace/theme/github');
@@ -221,7 +163,7 @@ function edit(param) {
 
 
 function save(projectName,param){
-
+            document.getElementById('eval'+param).disabled = false; 
             // Obtener el contenido de los editores
             var package='(in-package :cl-lisa-web)';
             var conditionContent = package + conditionEditor.getValue();
@@ -255,6 +197,19 @@ function eval(projectName,param){
                 projectName: projectName // Incluir el nombre del proyecto
               },
               target: '#'+param+'-response-message', // Actualizar el contenedor de mensajes
+              swap: 'innerHTML' // Reemplazar el contenido del contenedor
+            });}
+
+
+
+function run(){
+            var conditionContent = conditionEditor.getValue();
+            // Ejemplo: Enviar datos al servidor usando HTMX
+            htmx.ajax('POST', '/api/project/run', {
+              values: {
+                content: conditionContent,
+              },
+              target: '#console-output', // Actualizar el contenedor de mensajes
               swap: 'innerHTML' // Reemplazar el contenido del contenedor
             });}
 
