@@ -38,26 +38,25 @@
     (with-open-file (rules-file (merge-pathnames "facts.lisp" project-path)
                                 :direction :output
                                 :if-exists :supersede
-                                :if-does-not-exist :create)
-      (format rules-file ";; Facts for project ~a~%" project-name))
+                                :if-does-not-exist :create))
     ;; Crear el archivo rules.lisp
     (with-open-file (rules-file (merge-pathnames "rules.lisp" project-path)
                                 :direction :output
                                 :if-exists :supersede
-                                :if-does-not-exist :create)
-      (format rules-file ";; Rules for project ~a~%" project-name))
+                                :if-does-not-exist :create))
+      
     ;; Crear el archivo templates.lisp
     (with-open-file (templates-file (merge-pathnames "templates.lisp" project-path)
                                     :direction :output
                                     :if-exists :supersede
-                                    :if-does-not-exist :create)
-      (format templates-file ";; Templates for project ~a~%" project-name))
+                                    :if-does-not-exist :create))
+
     ;; Crear el archivo functions.lisp
     (with-open-file (rules-file (merge-pathnames "functions.lisp" project-path)
                                 :direction :output
                                 :if-exists :supersede
-                                :if-does-not-exist :create)
-      (format rules-file ";; Functions for project ~a~%" project-name))
+                                :if-does-not-exist :create))
+
     project-path))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;GET FUNCTIONS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -211,7 +210,8 @@
 
 (defun run-project (project-name)
   "Carga los archivos del proyecto, inicializa el motor de reglas y ejecuta el programa."
-
+  (reset)
+  (clear)
   (make-inference-engine)
 
   (let* ((base-path (merge-pathnames "projects/" (asdf:system-source-directory :cl-lisa-web)))
@@ -231,8 +231,8 @@
         (progn
 	  (load-file templates-file)
           (load-file rules-file)
-	  ;;(load-file facts-file)
-          ;;(load-file functions-file)
+	  (load-file facts-file)
+          (load-file functions-file)
           
           ;; Inicializar el motor de reglas
 	 
@@ -256,14 +256,36 @@
 
 (defun execute-engine () 
   ;; Initialize the system state
-  
-  (reset)
   (trace-project)
-  ;;(run)
-  )
+  (log:info "Starting run...")
+  (run))
 
 
 (defun trace-project()
   (watch :activations)
   (watch :facts)
   (watch :rules))
+
+
+(easy-routes:defroute api-run-project ("/api/project/run/:project-name" :method :post) ()
+  "Ejecuta el programa para el proyecto especificado."
+  (handler-case
+      (progn
+        ;; Imprimir el nombre del proyecto para depuración
+        (print project-name)
+
+        ;; Ejecutar el proyecto
+        (run-project project-name)
+
+        ;; Devolver un mensaje de éxito
+        (spinneret:with-html-string
+          (:div :class "uk-alert uk-alert-success" :data-uk-alert t
+                (:a :class "uk-alert-close" :data-uk-close t)
+                (:p (format nil "El programa se ha ejecutado correctamente para el proyecto '~a'." project-name)))))
+    ;; Manejar errores durante la ejecución
+    (error (e)
+      (spinneret:with-html-string
+        (:div :class "uk-alert uk-alert-danger" :data-uk-alert t
+              (:a :class "uk-alert-close" :data-uk-close t)
+              (:p (format nil "Error al ejecutar el programa: ~a" e)))))))
+

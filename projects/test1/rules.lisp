@@ -1,5 +1,4 @@
 (in-package :cl-lisa-web)
-
 (defrule turn-on-heater ()
   (ambient-temperature (current-temperature ?ct) 
                        (desired-temperature ?dt)
@@ -17,4 +16,8 @@
   =>
   (assert (heater-state (state off)))
   (print "Turning off the heater"))
+         
+
+         
+
          

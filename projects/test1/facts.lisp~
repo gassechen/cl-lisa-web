@@ -1,0 +1,7 @@
+(in-package :cl-lisa-web)n(deffacts startup ()
+  (ambient-temperature (current-temperature 20)
+                                (desired-temperature 25)
+                                (location "room")))
+         
+
+         

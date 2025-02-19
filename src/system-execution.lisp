@@ -21,7 +21,9 @@
 			(:h3 :class "uk-card-title" "Control Panel")
 			(:div :class "uk-grid-small" :data-uk-grid t
 			      (:div :class "uk-width-auto"
-				    (:button :id "start-system-btn" :class "uk-button uk-button-success"
+				    (:button :id "start-system-btn"
+					     :data-hx-post (format nil "/api/project/run/~A" project-name)
+					     :class "uk-button uk-button-success"
 					     (:span :class "status-indicator status-stopped" :id "status-indicator")
 					     "Start System"))
 			      (:div :class "uk-width-auto"
@@ -210,13 +212,14 @@ function edit(param) {
 function save(projectName,param){
 
             // Obtener el contenido de los editores
-            var conditionContent = conditionEditor.getValue();
+            var package='(in-package :cl-lisa-web)';
+            var conditionContent = package + conditionEditor.getValue();
             var projectName = projectName;
             var api=param;
 
             // Agregar el contenido a campos ocultos o enviarlo mediante HTMX
             console.log('projectName Body:', projectName);
-            console.log('Template Body:', conditionContent);
+            console.log('Template Body:', package + conditionContent);
 
             // Ejemplo: Enviar datos al servidor usando HTMX
             htmx.ajax('POST', '/api/save/'+api, {
