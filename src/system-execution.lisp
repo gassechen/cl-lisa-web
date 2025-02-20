@@ -24,7 +24,7 @@
 				    (:button :id "start-system-btn"
 					     :data-hx-post (format nil "/api/project/start/~A" project-name)
 					     :data-hx-target "#result-alert"
-					     :class "uk-button uk-button-success"
+					     :class "uk-button uk-button-primary"
 					     (:span :class "status-indicator status-stopped" :id "status-indicator")
 					     "Start System"))
 			      (:div :class "uk-width-auto"
@@ -148,7 +148,7 @@
             ;; JavaScript for dynamic behavior
             (:raw "<script>
 
-function edit(param) {
+            function edit(param) {
             
             let typeForm = param;
             conditionEditor = ace.edit(param+'-view');
@@ -162,7 +162,7 @@ function edit(param) {
             });}
 
 
-function save(projectName,param){
+            function save(projectName,param){
             document.getElementById('eval'+param).disabled = false; 
             // Obtener el contenido de los editores
             var package='(in-package :cl-lisa-web)';
@@ -185,7 +185,7 @@ function save(projectName,param){
             });}
 
 
-function eval(projectName,param){
+            function eval(projectName,param){
             var conditionContent = conditionEditor.getValue();
             var projectName = projectName;
             var api=param;
@@ -202,7 +202,7 @@ function eval(projectName,param){
 
 
 
-function run(){
+            function run(){
             var conditionContent = conditionEditor.getValue();
             // Ejemplo: Enviar datos al servidor usando HTMX
             htmx.ajax('POST', '/api/project/run', {

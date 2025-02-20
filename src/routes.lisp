@@ -8,7 +8,7 @@
     (setf (hunchentoot:header-out "X-Frame-Options") "DENY")
     (setf (hunchentoot:header-out "X-Content-Type-Options") "nosniff")
     (format nil "~a" html)))
-  
+
 
 ;; Ruta para crear un nuevo proyecto
 (easy-routes:defroute create-project ("/api/projects/new" :method :post) ()
@@ -23,7 +23,12 @@
     (if project-name
         ;; Crear la carpeta y los archivos
         (let ((project-path (create-project-files project-name)))
-          (format nil "Project '~a' created successfully at: ~a" project-name project-path))
+
+	  (spinneret:with-html-string
+            (:div :class "uk-alert uk-alert-success" :data-uk-alert t
+                  (:a :class "uk-alert-close" :data-uk-close t)
+                  (format nil "Project '~a' created successfully at: ~a" project-name project-path))))
+
         ;; Si no se proporciona un nombre de proyecto
         "Error: Project name is required.")))
 
