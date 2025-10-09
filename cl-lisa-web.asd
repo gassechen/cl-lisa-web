@@ -1,6 +1,6 @@
 (asdf:defsystem "cl-lisa-web"
   :version "0.1"
-  :author ""
+  :author "Gaston Pepe"
   :license "WTFPL"
   :depends-on (:local-time
                :cl-ppcre

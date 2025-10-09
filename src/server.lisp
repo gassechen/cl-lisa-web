@@ -17,8 +17,8 @@
                                 :port (or port *port*)))
     
   (push (hunchentoot:create-folder-dispatcher-and-handler
-       "/static/" (merge-pathnames "src/static/"  ;; starts without a /
-                                   (asdf:system-source-directory :vmc-config)))
+       "/static/" (merge-pathnames "src/static/" 
+                                   (asdf:system-source-directory :cl-lisa-web)))
   
 	hunchentoot:*dispatch-table*)
   

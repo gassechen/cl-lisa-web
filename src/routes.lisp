@@ -1,6 +1,14 @@
 (in-package :cl-lisa-web)
 
 ;; Definir las rutas de la API
+(easy-routes:defroute main-root-projects ("/" :method :get)()
+  (let ((html (render-project-management-page)))
+    (setf (hunchentoot:content-type*) "text/html")
+    (setf (hunchentoot:header-out "Content-Security-Policy") *csp-header*)
+    (setf (hunchentoot:header-out "X-Frame-Options") "DENY")
+    (setf (hunchentoot:header-out "X-Content-Type-Options") "nosniff")
+    (format nil "~a" html)))
+
 (easy-routes:defroute load-projects ("/api/projects" :method :get)()
   (let ((html (render-project-management-page)))
     (setf (hunchentoot:content-type*) "text/html")
